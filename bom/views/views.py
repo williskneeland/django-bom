@@ -46,6 +46,11 @@ from bom.forms import (
     PartClassForm,
     PartClassFormSet,
     PartClassSelectionForm,
+    PartClassWorkflowForm,
+    PartClassWorkflowStateForm,
+    CreatePartClassWorkflowStateForm,
+    CreatePartClassWorkflowTransitionForm,
+    PartClassWorkflowStateChangeForm,
     PartCSVForm,
     PartFormIntelligent,
     PartFormSemiIntelligent,
@@ -73,9 +78,17 @@ from bom.models import (
     Subpart,
     User,
     UserMeta,
+    PartClassWorkflowState,
+    PartClassWorkflowStateTransition,
+    PartClassWorkflow,
+    PartWorkflowInstance,
+    PartClassWorkflowCompletedTransition
 )
 from bom.utils import check_references_for_duplicates, listify_string, prep_for_sorting_nicely, stringify_list
 
+import bom.state_diagram_builder as diagrams
+
+import json
 
 logger = logging.getLogger(__name__)
 
@@ -162,9 +175,9 @@ def home(request):
         query_stripped = query.strip()
 
         # Parse terms separated by white space but keep together words inside of double quotes,
-        # for example 
-        #   "Big Company Inc." 
-        # is parsed as 'Big Company Inc.' while 
+        # for example
+        #   "Big Company Inc."
+        # is parsed as 'Big Company Inc.' while
         #    Big Company Inc.
         # is parsed as 'Big' 'Company' 'Inc.'
         search_terms = query_stripped
@@ -557,6 +570,10 @@ def part_info(request, part_id, part_revision_id=None):
     organization = profile.organization
 
     part = get_object_or_404(Part, pk=part_id)
+    change_state_form_action = reverse('bom:part-info', kwargs={'part_id': part_id})
+
+    workflow_instance = PartWorkflowInstance.objects.filter(part=part).first()
+
 
     part_revision = None
     if part_revision_id is None:
@@ -584,6 +601,73 @@ def part_info(request, part_id, part_revision_id=None):
         part_info_form = PartInfoForm(request.POST)
         if part_info_form.is_valid():
             qty = request.POST.get('quantity', 100)
+
+        if workflow_instance and ('submit-workflow-state' in request.POST or 'reject-workflow-state' in request.POST):
+            change_state_form = PartClassWorkflowStateChangeForm(request.POST)
+
+            if not change_state_form.is_valid():
+                return HttpResponse(change_state_form.errors['transition'])
+
+            # Should workflow instance be deleted after finishing?
+            if workflow_instance.current_state.is_final_state:
+                workflow_instance.delete()
+                messages.success(request, f"Workflow for {part} completed!")
+                return HttpResponseRedirect(reverse('bom:part-info', kwargs={'part_id': part_id}))
+
+            else:
+                selected_transition = change_state_form.cleaned_data['transition']
+                comments = change_state_form.cleaned_data['comments']
+
+                completed_transition = PartClassWorkflowCompletedTransition(
+                    transition=selected_transition,
+                    completed_by=user,
+                    comments=comments,
+                    part=part
+                )
+
+                workflow_instance.current_state = selected_transition.target_state
+                workflow_instance.save()
+                completed_transition.save()
+
+
+    completed_transitions = PartClassWorkflowCompletedTransition.objects.filter(part=part)
+    if workflow_instance:
+        all_forward_transitions = PartClassWorkflowStateTransition.objects.filter(
+            workflow=workflow_instance.workflow,
+            direction_in_workflow='forward'
+        )
+
+        current_forward_transitions = all_forward_transitions.filter(source_state=workflow_instance.current_state)
+
+        backward_transitions = PartClassWorkflowStateTransition.objects.filter(
+            workflow=workflow_instance.workflow,
+            source_state=workflow_instance.current_state,
+            direction_in_workflow='backward'
+        )
+
+        saved_img_filename = diagrams.workflow_img(
+            initial_state=workflow_instance.workflow.initial_state,
+            forward_transitions=all_forward_transitions,
+            filename=workflow_instance.workflow.name,
+            dir=constants.CLASS_WORKFLOW_IMG_PATH
+        )
+
+        if not saved_img_filename: # unable to create/find img
+            workflow_str_lines = diagrams.workflow_str(
+                initial_state=workflow_instance.workflow.initial_state,
+                forward_transitions=all_forward_transitions
+            )
+        else:
+            saved_img_path = f'bom/img/workflows/{saved_img_filename}'
+            #saved_img_path = f'{constants.CLASS_WORKFLOW_IMG_PATH}/{saved_img_filename}'
+
+        if workflow_instance.current_state.is_final_state:
+
+            submit_state_form = PartClassWorkflowStateChangeForm(final_transition=True)
+        else:
+            submit_state_form = PartClassWorkflowStateChangeForm(forward_transitions=current_forward_transitions)
+
+        reject_state_form = PartClassWorkflowStateChangeForm(backward_transitions=backward_transitions)
 
     try:
         qty = int(qty)
@@ -622,6 +706,7 @@ def part_info(request, part_id, part_revision_id=None):
 
     where_used_part = part.where_used()
     seller_parts = part.seller_parts()
+
     return TemplateResponse(request, 'bom/part-info.html', locals())
 
 
@@ -875,6 +960,104 @@ def export_part_list(request):
 
 
 @login_required
+def create_part_class_workflow(request):
+    user = request.user
+    profile = user.bom_profile()
+    organization = profile.organization
+
+    title = 'Create New Part Class Workflow'
+    max_transitions = constants.NUMBER_WORKFLOW_TRANSITIONS_MAX
+
+    transition_forms = []
+    for i in range(max_transitions):
+        prefix = f'trans{i}'
+        transition_forms.append(CreatePartClassWorkflowTransitionForm(prefix=prefix))
+
+    workflow_form = PartClassWorkflowForm(initial={'name': '', 'current_state': ''})
+
+    new_state_form = CreatePartClassWorkflowStateForm()
+    new_state_form_action = reverse('bom:create-part-class-workflow')
+
+    if request.method == 'POST':
+        if 'submit-workflow-state-create' in request.POST:
+            workflow_state_form = CreatePartClassWorkflowStateForm(request.POST)
+            if workflow_state_form.is_valid():
+                workflow_state_form.save()
+                messages.success(request, f"State '{workflow_state_form.cleaned_data['name']}' saved!")
+            else:
+                error_msg = 'Error creating new state. Missing required fields:  '
+                for error in workflow_state_form.errors:
+                    error_msg += f'{error}, '
+                messages.error(request, error_msg.rstrip("\n"))
+                return TemplateResponse(request, 'bom/create-part-class-workflow.html', locals())
+
+        else: # workflow form submitted
+
+            has_final_state = False
+            valid_transitions = []
+            # As of now the onus is on the admins to ensure the states map correctly
+            for i in range(max_transitions):
+                transition_form = CreatePartClassWorkflowTransitionForm(request.POST, prefix="trans{}".format(i))
+                if transition_form.is_valid():
+                    valid_transitions.append(transition_form.cleaned_data)
+                    if transition_form.cleaned_data['target_state'].is_final_state:
+                        has_final_state = True
+
+            if not has_final_state:
+                messages.error(request, "Must be able to transition to a final state.")
+                return TemplateResponse(request, 'bom/create-part-class-workflow.html', locals())
+
+
+            workflow_form = PartClassWorkflowForm(request.POST)
+            if not workflow_form.is_valid():
+                messages.warning(request, "Invalid entries for workflow")
+
+            workflow_name = workflow_form.cleaned_data['name']
+
+            # valid_transitions = []
+            # # As of now the onus is on the admins to ensure the states map correctly
+            # for i in range(max_transitions):
+            #     transition_form = CreatePartClassWorkflowTransitionForm(request.POST, prefix="trans{}".format(i))
+            #     if transition_form.is_valid():
+            #         valid_transitions.append(transition_form.cleaned_data)
+
+            if len(valid_transitions) == 0:
+                messages.error(request, "You cannot create a workflow without defining any state transitions.")
+                return TemplateResponse(request, 'bom/create-part-class-workflow.html', locals())
+            else:
+                workflow_form.save()
+
+            for transition in valid_transitions:
+                try:
+                    source_state = transition['source_state']
+                    target_state = transition['target_state']
+                    workflow = workflow=PartClassWorkflow.objects.filter(name=workflow_name).first()
+
+                    new_transition = PartClassWorkflowStateTransition(
+                        workflow=workflow,
+                        source_state=source_state,
+                        target_state=target_state,
+                        direction_in_workflow='forward'
+                    )
+                    new_transition.save()
+
+                    # Creating the
+                    opposite_transition = PartClassWorkflowStateTransition(
+                        workflow=workflow,
+                        source_state=target_state,
+                        target_state=source_state,
+                        direction_in_workflow='backward'
+                    )
+                    opposite_transition.save()
+                except:
+                    pass
+            messages.success(request, "Workflow created!")
+
+
+    return TemplateResponse(request, 'bom/create-part-class-workflow.html', locals())
+
+
+@login_required
 def create_part(request):
     user = request.user
     profile = user.bom_profile()
@@ -920,7 +1103,7 @@ def create_part(request):
 
             if part_revision_form.is_valid():
                 # Save the Part before the PartRevision, as this will again check for part
-                # number uniqueness. This way if someone else(s) working concurrently is also 
+                # number uniqueness. This way if someone else(s) working concurrently is also
                 # using the same part number, then only one person will succeed.
                 try:
                     new_part.save()  # Database checks that the part number is still unique
@@ -943,6 +1126,18 @@ def create_part(request):
 
                 new_part.primary_manufacturer_part = manufacturer_part
                 new_part.save()
+
+            # creating new instance of a workflow for the part.
+            workflow = new_part.number_class.workflow
+            if workflow is not None:
+                workflow_instance = PartWorkflowInstance(
+                    part=new_part,
+                    workflow=workflow,
+                    current_state=workflow.initial_state
+                )
+                workflow_instance.save()
+
+
 
             return HttpResponseRedirect(reverse('bom:part-info', kwargs={'part_id': str(new_part.id)}))
     else:
@@ -1333,6 +1528,11 @@ def part_revision_release(request, part_id, part_revision_id):
     organization = profile.organization
 
     part = get_object_or_404(Part, pk=part_id)
+    workflow_instance = PartWorkflowInstance.objects.filter(part=part)
+    if workflow_instance:
+        messages.error(request, "Cannot release part until it's workflow is finished!")
+        return HttpResponseRedirect(reverse('bom:part-info', kwargs={'part_id': part.id}))
+
     part_revision = get_object_or_404(PartRevision, pk=part_revision_id)
     action = reverse('bom:part-revision-release', kwargs={'part_id': part.id, 'part_revision_id': part_revision.id})
     title = 'Promote {} Rev {} {} from <b>Working</b> to <b>Released</b>?'.format(part.full_part_number(), part_revision.revision, part_revision.synopsis())
@@ -1453,7 +1653,7 @@ def part_revision_delete(request, part_id, part_revision_id):
 
     if profile.role != 'A':
         messages.error(request, 'Only an admin can perform this action.')
-        return HttpResponseRedirect(reverse('bom:part-info', kwargs={'part_id': part.id}))
+        return HttpResponseRedirect(reverse('bom:part-info', kwargs={'part_id': part_id}))
 
     part_revision = get_object_or_404(PartRevision, pk=part_revision_id)
     part = part_revision.part

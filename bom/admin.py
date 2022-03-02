@@ -28,6 +28,43 @@ class SubpartInline(admin.TabularInline):
     #     return obj.assembly_subpart.part.full_part_number()
     # get_full_part_number.short_description = 'PartNumber'
 
+class PartClassWorkflowAdmin(admin.ModelAdmin):
+    list_display = (
+        'name',
+        'initial_state'
+    )
+
+
+class PartClassWorkflowStateAdmin(admin.ModelAdmin):
+    list_display = (
+        'name',
+        'assigned_user'
+    )
+
+
+class PartClassWorkflowStateTransitionAdmin(admin.ModelAdmin):
+    list_display = (
+        'workflow',
+        'source_state',
+        'target_state'
+    )
+
+class PartWorkflowInstanceAdmin(admin.ModelAdmin):
+    list_display = (
+        'part',
+        'workflow',
+        'current_state'
+    )
+
+
+class PartClassWorkflowCompletedTransitionAdmin(admin.ModelAdmin):
+    list_display = (
+        'transition',
+        'completed_by',
+        'comments',
+        'timestamp',
+        'part'
+    )
 
 class SellerAdmin(admin.ModelAdmin):
     list_display = ('name',)
@@ -128,6 +165,11 @@ class AssemblyAdmin(admin.ModelAdmin):
 
 admin.site.unregister(User)
 
+admin.site.register(PartClassWorkflowCompletedTransition, PartClassWorkflowCompletedTransitionAdmin)
+admin.site.register(PartWorkflowInstance, PartWorkflowInstanceAdmin)
+admin.site.register(PartClassWorkflowStateTransition, PartClassWorkflowStateTransitionAdmin)
+admin.site.register(PartClassWorkflowState, PartClassWorkflowStateAdmin)
+admin.site.register(PartClassWorkflow, PartClassWorkflowAdmin)
 admin.site.register(User, UserAdmin)
 admin.site.register(Organization, OrganizationAdmin)
 admin.site.register(Seller, SellerAdmin)

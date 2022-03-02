@@ -26,6 +26,11 @@ NUMBER_VARIATION_LEN_MIN = 0
 NUMBER_VARIATION_LEN_MAX = 16
 NUMBER_VARIATION_LEN_DEFAULT = 2
 
+# Workflows
+import os
+CLASS_WORKFLOW_IMG_PATH = f'{os.path.dirname(os.path.realpath(__file__))}/static/bom/img/workflows'
+NUMBER_WORKFLOW_TRANSITIONS_MAX = 20
+
 DATA_SOURCE_OCTOPART = 'octopart'
 DATA_SOURCE_MOUSER = 'mouser'
 DATA_SOURCES = (

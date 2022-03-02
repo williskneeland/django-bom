@@ -46,6 +46,8 @@ from .csv_headers import PartsListCSVHeaders, PartsListCSVHeadersSemiIntelligent
 from .part_bom import PartBom, PartBomItem, PartIndentedBomItem
 from .utils import increment_str, listify_string, prep_for_sorting_nicely, stringify_list, strip_trailing_zeros
 from .validators import alphanumeric, numeric, validate_pct
+from django.conf import settings
+from django.contrib.auth import get_user_model
 
 
 logger = logging.getLogger(__name__)
@@ -131,12 +133,70 @@ class UserMeta(models.Model):
     User.add_to_class('bom_profile', _user_meta)
 
 
+# Workflow Models
+class PartClassWorkflowState(models.Model):
+    name = models.CharField(max_length=255, default='', null=True, blank=True)
+    is_final_state = models.BooleanField(default=False, null=False)
+    assigned_user = models.ForeignKey(settings.AUTH_USER_MODEL, null=False, on_delete=models.DO_NOTHING, default=get_user_model().objects.first().pk)
+
+    @staticmethod
+    def get_all_states_tuple():
+        states = []
+        for state in PartClassWorkflowState.objects.all():
+            states.append((state.name, state.name))
+
+        return states
+
+
+    def __str__(self):
+        if self.is_final_state:
+            return f'{self.name}[final]'
+
+        return f'{self.name}'
+
+
+
+class PartClassWorkflow(models.Model):
+    name = models.CharField(max_length=255, default=None, unique=True)
+    initial_state = models.ForeignKey(PartClassWorkflowState, null=True, blank=True, default=None, on_delete=models.CASCADE)
+    # delete_after_completion = true/false
+
+    def copy(self, full_part_number):
+        workflow_copy = PartClassWorkflow(
+            name=f'{self.name}:{full_part_number}',
+            current_state=self.current_state
+        )
+
+        workflow_copy.save()
+        return workflow_copy
+
+
+    def __str__(self):
+        return self.name
+
+
+
+class PartClassWorkflowStateTransition(models.Model):
+    workflow = models.ForeignKey(PartClassWorkflow, null=False, default=None, on_delete=models.CASCADE)
+    source_state = models.ForeignKey(PartClassWorkflowState, null=False, on_delete=models.CASCADE, related_name='source_state')
+    target_state = models.ForeignKey(PartClassWorkflowState, null=False, on_delete=models.CASCADE, related_name='target_state')
+    direction_in_workflow = models.CharField(max_length=15, default='forward')
+
+    class Meta:
+        unique_together = (('source_state', 'target_state', 'workflow'))
+
+    def __str__(self):
+        return '{} -> {} (assign to {})'.format(self.source_state, self.target_state, self.target_state.assigned_user)
+
+
+
 class PartClass(models.Model):
     organization = models.ForeignKey(Organization, on_delete=models.CASCADE, db_index=True)
     code = models.CharField(max_length=NUMBER_CLASS_CODE_LEN_MAX, validators=[alphanumeric])
     name = models.CharField(max_length=255, default=None)
     comment = models.CharField(max_length=255, default=None, blank=True)
     mouser_enabled = models.BooleanField(default=False)
+    workflow = models.ForeignKey(PartClassWorkflow, null=True, default=None, on_delete=models.SET_NULL)
 
     class Meta:
         unique_together = [['code', 'organization', ], ]
@@ -169,6 +229,7 @@ class Part(models.Model):
     primary_manufacturer_part = models.ForeignKey('ManufacturerPart', default=None, null=True, blank=True,
                                                   on_delete=models.SET_NULL, related_name='primary_manufacturer_part')
     google_drive_parent = models.CharField(max_length=128, blank=True, default=None, null=True)
+
 
     class Meta:
         unique_together = ['number_class', 'number_item', 'number_variation', 'organization', ]
@@ -346,6 +407,47 @@ class Part(models.Model):
 
     def __str__(self):
         return u'%s' % (self.full_part_number())
+
+
+class PartWorkflowInstance(models.Model):
+    part = models.ForeignKey(Part, null=False, on_delete=models.CASCADE, default=None)
+    workflow = models.ForeignKey(PartClassWorkflow, on_delete=models.CASCADE, default=None)
+    current_state = models.ForeignKey(PartClassWorkflowState, on_delete=models.CASCADE, default=None)
+
+    def __str__(self):
+        return self.workflow.name
+
+class PartClassWorkflowCompletedTransition(models.Model):
+    transition = models.ForeignKey(PartClassWorkflowStateTransition, on_delete=models.CASCADE, null=False, blank=False)
+    completed_by = models.ForeignKey(settings.AUTH_USER_MODEL, null=False, on_delete=models.DO_NOTHING, default=get_user_model().objects.first().pk)
+    comments = models.CharField(max_length=500, null=True, blank=True, default='')
+    timestamp = models.DateTimeField(auto_now_add=True, blank=True)
+    part = models.ForeignKey(Part, null=False, default=None, on_delete=models.CASCADE)
+
+    class Meta:
+        ordering = ('-timestamp', )
+
+    # @staticmethod
+    # def get_last_states(part, state):
+    #     last_states = []
+    #     for completed_transition in PartClassWorkflowCompletedTransition.objects.filter(part=part):
+    #         cur_source = completed_transition.transition.source_state
+    #         cur_target = completed_transition.transition.target_state
+    #
+    #         if cur_target == state and (cur_source, cur_source) not in last_states:
+    #             last_states.append((cur_source, cur_source))
+    #
+    #
+    #     return last_states
+
+
+    def __str__(self):
+        return "({})->({}) completed by: {}".format(
+            self.transition.source_state,
+            self.transition.target_state,
+            self.transition.source_state.assigned_user
+        )
+
 
 
 # Below are attributes of a part that can be changed, but it's important to trace the change over time
@@ -547,7 +649,7 @@ class PartRevision(models.Model):
         flat_given_bom(flat_bom, self)
 
         # Sort by references, if no references then use part number.
-        # Note that need to convert part number to a list so can be compared with the 
+        # Note that need to convert part number to a list so can be compared with the
         # list-ified string returned by prep_for_sorting_nicely.
         def sort_by_references(p):
             return prep_for_sorting_nicely(p.references) if p.references else p.__str__().split()

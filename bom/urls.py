@@ -16,6 +16,7 @@ bom_patterns = [
     path('bom-signup/', views.bom_signup, name='bom-signup'),
     path('settings/', views.bom_settings, name='settings'),
     path('settings/<str:tab_anchor>/', views.bom_settings, name='settings'),
+    path('create-part-class-workflow/', views.create_part_class_workflow, name='create-part-class-workflow'),
     path('export/', views.export_part_list, name='export-part-list'),
     path('user-meta/<int:user_meta_id>/edit/', views.user_meta_edit, name='user-meta-edit'),
     path('part-class/<int:part_class_id>/edit/', views.part_class_edit, name='part-class-edit'),

@@ -108,6 +108,156 @@
                         <li class="tab"><a id="bom-tab" href="#bom">Bill of Materials</a></li>
                         <li class="tab"><a id="used-tab" href="#used">Where Used</a></li>
                         <li class="tab"><a id="sourcing-tab" href="#sourcing">Sourcing</a></li>
+                        {% if workflow_instance or completed_transitions %}<li class="tab"><a id="workflow-tab" href="#workflow">Workflow</a></li>{% endif %}
+                    </ul>
+                </div>
+
+
+                <div id="workflow" class="col s12" style="display: none;">
+                    <h4 class="printer-show">Workflow for {{part}}</h4>
+                    <br>
+                    <ul class="collection with-header">
+                        <p>
+                            {{workflow_str}}
+                        </p>
+                        <li class="collection-header">
+                            <h5>Workflow Status</h5>
+                        </li>
+                        <li class="collection-item">
+                            <div class="row">
+                                <br>
+                                <div class="col s3" id="workflow_diagram" style="text-align: center;">
+                                    {% if saved_img_path or workflow_str_lines %}
+                                        <div >Workflow Diagram</div>
+                                        {% if saved_img_path %}
+                                            <img id="workflow_diagram_img" style="width: 100%; height: auto; max-width: 300px; max-height: 300px;" src="{% static saved_img_path %}"/>
+                                        {% else %}
+                                            <p id="workflow_diagram_str">
+                                                {% for line in workflow_str_lines %}
+                                                    <pre><h6 style="margin: 3%;">{{line}}</h6></pre>
+                                                {% endfor %}
+
+                                                (To display the graph in a state diagram image, install
+                                                <a href="https://pygraphviz.github.io/documentation/stable/install.html">
+                                                    PyGraphviz
+                                                </a>)
+                                            </p>
+                                        {% endif %}
+                                    {% endif %}
+                                </div>
+                                <div class="col s9">
+                                    {% if workflow_instance %}
+                                        <div class="row">
+                                            <div class="col s4 l2 text-right">Part:</div>
+                                            <div class="col s8 l10">{{ part }}</div>
+                                        </div>
+                                        <div class="row">
+                                            <div class="col s4 l2 text-right">Workflow:</div>
+                                            <div class="col s8 l10">{{ workflow_instance }}</div>
+                                        </div>
+                                        <div class="row">
+                                            <div class="col s4 l2 text-right" style="padding-left: 0px;">Current State:</div>
+                                            <div class="col s8 l10">{{ workflow_instance.current_state }}</div>
+                                        </div>
+                                        <div class="row">
+                                                <div class="col s4 l2 text-right" style="padding-left: 0px;">Assigned User:</div>
+                                                <div class="col s8 l10">
+                                                    {{ workflow_instance.current_state.assigned_user.first_name }}
+                                                    {{ workflow_instance.current_state.assigned_user.last_name }}
+                                                    ({{ workflow_instance.current_state.assigned_user.email }})
+                                                </div>
+                                        </div>
+                                    {% else %}
+                                        <div class="row">
+                                            <div class="col s4 l2 text-right" style="padding-left: 0px;">Workflow Complete!</div>
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+
+                            {% if user == workflow_instance.current_state.assigned_user %}
+                                <div class="row">
+                                    <div style="float: right;">
+                                        {% include 'bom/bom-form-modal.html' with modal_title='Approve Current Stage' form=submit_state_form action=change_state_form_action name='submit-workflow-state' %}
+                                    </div>
+
+                                    {% if backward_transitions and backward_transitions|length > 0 %}
+                                        <div style="float: left">
+                                            {% include 'bom/bom-form-modal.html' with modal_title='Reject Current Stage' form=reject_state_form action=change_state_form_action name='reject-workflow-state' %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            {% endif %}
+                        </li>
+                        <li class="collection-header">
+                            <h5>Transition Logs</h5>
+                        </li>
+                        <li class="collection-item">
+                            <div class="responsive-table-wrapper">
+                                <ul class="collapsible" data-collapsible="expandable">
+
+                                    <li class="active">
+                                        <div class="collapsible-header"><h5>Logs for {{part}} (click to show/hide)</h5></div>
+                                        <div class="collapsible-body">
+                                            <table class="highlight tight treetable">
+                                                <thead>
+                                                <tr>
+                                                    <th>Part</th>
+                                                    <th>Source State</th>
+                                                    <th>Target State</th>
+                                                    <th>Submitted By</th>
+                                                    <th>Comments</th>
+                                                    <th>Timestamp</th>
+                                                </tr>
+                                                </thead>
+                                                <tbody>
+                                                {% for completed_transition in completed_transitions %}
+                                                    <tr id="log{{completed_transition.id}}">
+                                                        <td>{{completed_transition.part}}</td>
+                                                        <td>{{completed_transition.transition.source_state}}</td>
+                                                        <td>{{completed_transition.transition.target_state}}</td>
+                                                        <td>{{completed_transition.completed_by}}</td>
+                                                        <td style="word-wrap: break-word; max-width: 500px; float: left;">
+                                                            {{completed_transition.comments}}
+                                                        </td>
+                                                        <td>{{completed_transition.timestamp}}</td>
+                                                    </tr>
+                                                {% endfor %}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </li>
+                                </ul>
+
+                            </div>
+                        </li>
+
+
+                            <li class="collection-header">
+                                <h5>Options (not implemented)</h5>
+                            </li>
+                            <li class="collection-item">
+                                <div class="row">
+
+                                    {% if workflow_instance %}
+                                        {% if user.is_superuser or profile.role == 'A' %}
+                                            <!-- ADMIN OPTIONS  -->
+                                            <a href="#" class="waves-effect waves-light btn green lighten-1">Force Finish Workflow</a>
+                                            <a href="#" class="waves-effect waves-light btn green lighten-1">Clear All Logs</a>
+
+                                            {% if backward_transitions and backward_transitions|length > 0 %}
+                                                <a href="#" class="waves-effect waves-light btn green lighten-1">Force Reject State</a>
+                                            {% endif %}
+                                            <a href="#" class="waves-effect waves-light btn green lighten-1">Force Approve State</a>
+                                    {% endif %}
+                                        {% if user.is_superuser or profile.role == 'A' or user == workflow_instance.current_state.assigned_user %}
+                                            <a href="#" class="waves-effect waves-light btn green lighten-1">Change Assigned User(not working)</a>
+                                        {% endif %}
+
+                                    {% endif %}
+                                </div>
+
+                            </li>
                     </ul>
                 </div>
 

@@ -120,6 +120,8 @@
                             {% endif %}
                             {% include 'bom/bom-form-modal.html' with modal_title='Upload Part Classes' form=part_class_csv_form action=part_class_form_action name='submit-part-class-upload' modal_description='To batch add part classes, upload a csv that contains columns with the headers<b>`name`</b> and <b>`code`</b>. You may optionally specify a description or comment by including a column with the header <b>`description`</b> or <b>`comment`</b>.' %}
                             {% include 'bom/bom-form-modal.html' with modal_title='Add Part Class' form=part_class_form action=part_class_form_action name='submit-part-class-create' %}
+
+                            <a href="{% url 'bom:create-part-class-workflow' %}" class="waves-effect waves-light btn green lighten-1">Create Part Class Workflow</a>
                         </div>
                     </div>
                     <h3 id="indabom-part-number">Part Number</h3>

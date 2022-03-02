@@ -63,6 +63,10 @@ from .models import (
     Subpart,
     User,
     UserMeta,
+    PartClassWorkflow,
+    PartClassWorkflowState,
+    PartClassWorkflowStateTransition,
+    PartClassWorkflowCompletedTransition
 )
 from .utils import (
     check_references_for_duplicates,
@@ -72,6 +76,8 @@ from .utils import (
     stringify_list,
 )
 from .validators import alphanumeric, decimal, numeric
+from django.contrib.auth import get_user_model
+from django.conf import settings
 
 
 logger = logging.getLogger(__name__)
@@ -335,13 +341,15 @@ class SellerPartForm(forms.ModelForm):
 class PartClassForm(forms.ModelForm):
     class Meta:
         model = PartClass
-        fields = ['code', 'name', 'comment']
+        fields = ['code', 'name', 'comment', 'workflow']
 
     def __init__(self, *args, **kwargs):
         self.organization = kwargs.pop('organization', None)
         super(PartClassForm, self).__init__(*args, **kwargs)
         self.fields['code'].required = False
         self.fields['name'].required = False
+        #self.fields['workflow'] = forms.ModelChoiceField(label='Workflow', queryset=PartClassWorkflow.objects.all(), required=False)
+        self.fields['workflow'].required = False
         self.fields['code'].validators.extend([MaxLengthValidator(self.organization.number_class_code_len), MinLengthValidator(self.organization.number_class_code_len)])
 
     def clean_name(self):
@@ -779,6 +787,150 @@ class PartFormIntelligent(forms.ModelForm):
             value.widget.attrs['placeholder'] = value.help_text
             value.help_text = ''
 
+
+
+class CreatePartClassWorkflowTransitionForm(forms.ModelForm):
+    class Meta:
+        model = PartClassWorkflowStateTransition
+        fields = ['source_state', 'target_state']
+
+    def __init__(self, *args, **kwargs):
+        super(CreatePartClassWorkflowTransitionForm, self).__init__(*args, **kwargs)
+        self.fields['source_state'] = forms.ModelChoiceField(label='Source State', queryset=PartClassWorkflowState.objects.all(), required=True)
+        self.fields['target_state'] = forms.ModelChoiceField(label='Target State', queryset=PartClassWorkflowState.objects.all(), required=True)
+
+
+class PartClassWorkflowForm(forms.ModelForm):
+    class Meta:
+        model = PartClassWorkflow
+        fields = ['name', 'initial_state']
+
+    def __init__(self, *args, **kwargs):
+        super(PartClassWorkflowForm, self).__init__(*args, **kwargs)
+        self.fields['initial_state'] = forms.ModelChoiceField(label='Initial State', queryset=PartClassWorkflowState.objects.all())
+        self.name = forms.CharField(label='Workflow Name', required=True)
+
+
+class PartClassWorkflowStateForm(forms.ModelForm):
+    class Meta:
+        model = PartClassWorkflowState
+        fields = ['name']
+
+    def __init__(self, *args, **kwargs):
+        super(PartClassWorkflowStateForm, self).__init__(*args, **kwargs)
+        self.fields['name'] = forms.ModelChoiceField(queryset=PartClassWorkflowState.objects.all(), required=True)
+
+
+class CreatePartClassWorkflowStateForm(forms.ModelForm):
+    class Meta:
+        model = PartClassWorkflowState
+        fields = ['name', 'assigned_user', 'is_final_state']
+
+    def __init__(self, *args, **kwargs):
+        super(CreatePartClassWorkflowStateForm, self).__init__(*args, **kwargs)
+        self.fields['name'] = forms.CharField(label='State Name', required=True)
+        self.fields['is_final_state'] = forms.ChoiceField(label='Final State in Workflow?', choices=((False, 'No'), (True, 'Yes')), widget=forms.Select(), required=True)
+        self.fields['assigned_user'] = forms.ModelChoiceField(label='Assigned User', queryset=get_user_model().objects.all(), required=True)
+
+
+# class SubmitPartClassWorkflowStateForm(forms.ModelForm):
+#
+#     class Meta:
+#         model = PartClassWorkflowCompletedTransition
+#         fields = ['part', 'completed_by', 'transition', 'comments']
+#
+#     def __init__(self, next_transitions, completed_by, part, *args, **kwargs):
+#         super(SubmitPartClassWorkflowStateForm, self).__init__(*args, **kwargs)
+#         self.fields['completed_by'] = forms.CharField(label='Completed By', disabled=True, initial=completed_by.first_name)
+#         self.fields['part'] = forms.CharField(label='Part', disabled=True, initial=part)
+#         self.fields['comments'] = forms.CharField(label=f"Comments", widget=forms.Textarea, required=False)
+#         self.fields['transition'] = forms.ModelChoiceField(label='Transition', queryset=next_transitions, initial=next_transitions.first())
+#
+#         self.fields['completed_by'].widget.attrs['readonly'] = True
+#         self.fields['part'].widget.attrs['readonly'] = True
+
+class PartClassWorkflowStateChangeForm(forms.ModelForm):
+    class Meta:
+        model = PartClassWorkflowCompletedTransition
+        fields = ['transition', 'comments']
+
+    def __init__(self, *args, **kwargs):
+        try:
+            forward_transitions = kwargs.pop('forward_transitions')
+        except KeyError:
+            forward_transitions = None
+
+        try:
+            backward_transitions = kwargs.pop('backward_transitions')
+        except KeyError:
+            backward_transitions = None
+
+        try:
+            final_transition = kwargs.pop('final_transition')
+        except KeyError:
+            final_transition = False
+
+
+        super(PartClassWorkflowStateChangeForm, self).__init__(*args, **kwargs)
+
+        if forward_transitions is not None and not final_transition: # submitting current State
+            self.fields['transition'] = forms.ModelChoiceField(forward_transitions, label='Select Forward Transition', required=True)
+        elif backward_transitions is not None: # rejecting state
+            self.fields['transition'] = forms.ModelChoiceField(backward_transitions, label='Select Backward Transition', required=True)
+        elif final_transition:# finishing workflow
+            self.fields['transition'] = forms.ModelChoiceField(PartClassWorkflowStateTransition.objects.none(), widget=forms.HiddenInput(), required=False)
+        else:
+            self.fields['transition'] = forms.ModelChoiceField(PartClassWorkflowStateTransition.objects.all(), initial=0, label='Transition', required=False)
+
+
+        if final_transition:
+            self.fields['comments'] = forms.CharField(label="Comments. Final State: Workflow Finished!", widget=forms.Textarea, required=False)
+        else:
+            self.fields['comments'] = forms.CharField(label="Comments", widget=forms.Textarea, required=False)
+
+
+# class RejectPartClassStateTransitionForm(forms.ModelForm):
+#     class Meta:
+#         model = PartClassWorkflowCompletedTransition
+#         fields = ['transition', 'comments']
+#
+#     def __init__(self, *args, **kwargs):
+#         super(RejectPartClassStateTransitionForm, self).__init__(*args, **kwargs)
+
+
+
+
+#
+# class SubmitPartClassWorkflowStateForm(forms.ModelForm):
+#     class Meta:
+#         model = PartClassWorkflowCompletedTransition
+#         fields = ['transition', 'comments']
+#
+#     def __init__(self, *args, **kwargs):
+#         try:
+#             next_transitions = kwargs.pop('next_transitions')
+#         except KeyError:
+#             next_transitions = PartClassWorkflowStateTransition.objects.all()
+#
+#         super(SubmitPartClassWorkflowStateForm, self).__init__(*args, **kwargs)
+#         self.fields['transition'] = forms.ModelChoiceField(queryset=next_transitions, label='Transition', required=True)
+#         self.fields['comments'] = forms.CharField(label='Comments on Current Stage', required=False)
+#
+#
+# class RejectPartClassWorkflowStateForm(forms.ModelForm):
+#     class Meta:
+#         model = PartClassWorkflowCompletedTransition
+#         fields = ['transition', 'comments']
+#
+#     def __init__(self, *args, **kwargs):
+#         try:
+#             previous__states = kwargs.pop('previous_states')
+#         except KeyError:
+#             previous__states = [()]
+#
+#         super(RejectPartClassWorkflowStateForm, self).__init__(*args, **kwargs)
+#         self.fields['transition'] = forms.ChoiceField(choices=previous__states, label='State to return to', required=True)
+#         self.fields['comments'] = forms.CharField(label='Comments on Current Stage', required=False)
 
 class PartFormSemiIntelligent(forms.ModelForm):
     class Meta:
