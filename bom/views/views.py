@@ -608,27 +608,27 @@ def part_info(request, part_id, part_revision_id=None):
             if not change_state_form.is_valid():
                 return HttpResponse(change_state_form.errors['transition'])
 
+            
+            selected_transition = change_state_form.cleaned_data['transition']
+            comments = change_state_form.cleaned_data['comments']
+
+            completed_transition = PartClassWorkflowCompletedTransition(
+                transition=selected_transition,
+                completed_by=user,
+                comments=comments,
+                part=part
+            )
+            completed_transition.save()
+            
             # Should workflow instance be deleted after finishing?
             if workflow_instance.current_state.is_final_state:
                 workflow_instance.delete()
                 messages.success(request, f"Workflow for {part} completed!")
                 return HttpResponseRedirect(reverse('bom:part-info', kwargs={'part_id': part_id}))
-
             else:
-                selected_transition = change_state_form.cleaned_data['transition']
-                comments = change_state_form.cleaned_data['comments']
-
-                completed_transition = PartClassWorkflowCompletedTransition(
-                    transition=selected_transition,
-                    completed_by=user,
-                    comments=comments,
-                    part=part
-                )
-
                 workflow_instance.current_state = selected_transition.target_state
                 workflow_instance.save()
-                completed_transition.save()
-
+             
 
     completed_transitions = PartClassWorkflowCompletedTransition.objects.filter(part=part)
     if workflow_instance:
