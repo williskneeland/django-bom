@@ -126,30 +126,20 @@
                         <li class="collection-item">
                             <div class="row">
                                 <br>
-                                {% comment %}
-                                <div class="col s3" id="workflow_diagram" style="text-align: center;">
+                                
+                                <div class="col s3" id="workflow_diagram">
 
-                                    {% if saved_img_path or workflow_str_lines %}
-                                        <div >Workflow Diagram</div>
-                                        {% if saved_img_filename %}
-                                            <img id="workflow_diagram_img" style="width: 100%; height: auto; max-width: 300px; max-height: 300px;" src="{% static saved_img_path %}"/>
-                                        {% else %}
-                                            <p id="workflow_diagram_str">
-                                                {% for line in workflow_str_lines %}
-                                                    <pre><h6 style="margin: 3%; float: left;">{{line}}</h6></pre>
-                                                {% endfor %}
-
-                                                (To display the graph in a state diagram image, install
-                                                <a href="https://pygraphviz.github.io/documentation/stable/install.html">
-                                                    PyGraphviz
-                                                </a>)
-                                            </p>
-                                        {% endif %}
+                                    {% if workflow_str_lines %}
+                                        <div style="text-align: center;">Workflow Diagram</div>
+                                        <p id="workflow_diagram_str" style="text-align: left;">
+                                            {% for line in workflow_str_lines %}
+                                                <pre><h6 style="margin: 3%;">{{ line }}</h6><pre>
+                                            {% endfor %}
+                                        </p>
                                     {% endif %}
 
                                 </div>
-                                {% endcomment %}
-                                <div class="col s12">
+                                <div class="col s9">
                                     {% if workflow_instance %}
                                         <div class="row">
                                             <div class="col s4 l2 text-right">Part:</div>
