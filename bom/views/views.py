@@ -658,8 +658,7 @@ def part_info(request, part_id, part_revision_id=None):
                 forward_transitions=all_forward_transitions
             )
         else:
-            saved_img_path = f'bom/img/workflows/{saved_img_filename}'
-            #saved_img_path = f'{constants.CLASS_WORKFLOW_IMG_PATH}/{saved_img_filename}'
+            saved_img_path = 'bom/img/workflows/'+saved_img_filename
 
         if workflow_instance.current_state.is_final_state:
 

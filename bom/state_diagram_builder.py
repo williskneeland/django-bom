@@ -7,6 +7,7 @@ except ImportError:
 from anytree import Node, RenderTree
 from anytree.exporter import DotExporter
 from os import path
+from django.conf import settings
 
 ILLEGAL_FILENAME_CHARS = '<>:"/\|?*'
 

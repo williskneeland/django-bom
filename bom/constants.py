@@ -27,8 +27,9 @@ NUMBER_VARIATION_LEN_MAX = 16
 NUMBER_VARIATION_LEN_DEFAULT = 2
 
 # Workflows
-import os
-CLASS_WORKFLOW_IMG_PATH = f'{os.path.dirname(os.path.realpath(__file__))}/static/bom/img/workflows'
+import bom
+from os import path
+CLASS_WORKFLOW_IMG_PATH = path.dirname(bom.__file__)+'/static/bom/img/workflows'
 NUMBER_WORKFLOW_TRANSITIONS_MAX = 20
 
 DATA_SOURCE_OCTOPART = 'octopart'
