@@ -236,22 +236,24 @@
                             </li>
                             <li class="collection-item">
                                 <div class="row">
-
-                                    {% if workflow_instance %}
-                                        {% if user.is_superuser or profile.role == 'A' %}
-                                            <!-- ADMIN OPTIONS  -->
-                                            <a href="#" class="waves-effect waves-light btn green lighten-1">Force Finish Workflow</a>
+                                    {% if user.is_superuser or profile.role == 'A' %}
+                                        {% if completed_transitions|length > 0 %}
                                             <a href="#" class="waves-effect waves-light btn green lighten-1">Clear All Logs</a>
+                                        {% endif %}
+                                        {% if workflow_instance %}
+                                                <a href="#" class="waves-effect waves-light btn green lighten-1">Force Finish Workflow</a>
 
-                                            {% if backward_transitions and backward_transitions|length > 0 %}
-                                                <a href="#" class="waves-effect waves-light btn green lighten-1">Force Reject State</a>
-                                            {% endif %}
-                                            <a href="#" class="waves-effect waves-light btn green lighten-1">Force Approve State</a>
+                                                {% if backward_transitions and backward_transitions|length > 0 %}
+                                                    <a href="#" class="waves-effect waves-light btn green lighten-1">Force Reject State</a>
+                                                {% endif %}
+                                                <a href="#" class="waves-effect waves-light btn green lighten-1">Force Approve State</a>
+                                        {% endif %}
+                                       
                                     {% endif %}
-                                        {% if user.is_superuser or profile.role == 'A' or user == workflow_instance.current_state.assigned_user %}
+                                    {% if user.is_superuser or profile.role == 'A' or workflow_instance %}
+                                        {% if user == workflow_instance.current_state.assigned_user %}
                                             <a href="#" class="waves-effect waves-light btn green lighten-1">Change Assigned User(not working)</a>
                                         {% endif %}
-
                                     {% endif %}
                                 </div>
 
