@@ -126,7 +126,9 @@
                         <li class="collection-item">
                             <div class="row">
                                 <br>
+                                {% comment %}
                                 <div class="col s3" id="workflow_diagram" style="text-align: center;">
+
                                     {% if saved_img_path or workflow_str_lines %}
                                         <div >Workflow Diagram</div>
                                         {% if saved_img_filename %}
@@ -144,8 +146,10 @@
                                             </p>
                                         {% endif %}
                                     {% endif %}
+
                                 </div>
-                                <div class="col s9">
+                                {% endcomment %}
+                                <div class="col s12">
                                     {% if workflow_instance %}
                                         <div class="row">
                                             <div class="col s4 l2 text-right">Part:</div>
