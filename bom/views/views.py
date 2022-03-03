@@ -632,10 +632,7 @@ def part_info(request, part_id, part_revision_id=None):
 
     completed_transitions = PartClassWorkflowCompletedTransition.objects.filter(part=part)
     if workflow_instance:
-        # all_forward_transitions = PartClassWorkflowStateTransition.objects.filter(
-        #     workflow=workflow_instance.workflow,
-        #     direction_in_workflow='forward'
-        # )
+        
 
         #current_forward_transitions = all_forward_transitions.filter(source_state=workflow_instance.current_state)
 
@@ -651,16 +648,18 @@ def part_info(request, part_id, part_revision_id=None):
         # if saved_img_filename:
         #     saved_img_path='bom/img/'+saved_img_filename
         # else:
-        #     workflow_str_lines = diagrams.workflow_str(
-        #         initial_state=workflow_instance.workflow.initial_state,
-        #         forward_transitions=all_forward_transitions
-        #     )
-
-        current_forward_transitions = PartClassWorkflowStateTransition.objects.filter(
+        
+        all_forward_transitions = PartClassWorkflowStateTransition.objects.filter(
             workflow=workflow_instance.workflow,
-            direction_in_workflow='forward',
-            source_state=workflow_instance.current_state
+            direction_in_workflow='forward'
         )
+        
+        workflow_str_lines = diagrams.workflow_str(
+            initial_state=workflow_instance.workflow.initial_state,
+            forward_transitions=all_forward_transitions
+        )
+
+        current_forward_transitions = all_forward_transitions.filter(source_state=workflow_instance.current_state)
 
         current_backward_transitions = PartClassWorkflowStateTransition.objects.filter(
             workflow=workflow_instance.workflow,
