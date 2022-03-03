@@ -130,7 +130,7 @@
                                     {% if saved_img_path or workflow_str_lines %}
                                         <div >Workflow Diagram</div>
                                         {% if saved_img_path %}
-                                            <img id="workflow_diagram_img" style="width: 100%; height: auto; max-width: 300px; max-height: 300px;" src="{% static saved_img_path %}"/>
+                                            <img id="workflow_diagram_img" style="width: 100%; height: auto; max-width: 300px; max-height: 300px;" src="{{ saved_img_path }}"/>
                                         {% else %}
                                             <p id="workflow_diagram_str">
                                                 {% for line in workflow_str_lines %}
