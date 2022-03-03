@@ -133,7 +133,11 @@
                                         <div style="text-align: center;">Workflow Diagram</div>
                                         <p id="workflow_diagram_str" style="text-align: left;">
                                             {% for line in workflow_str_lines %}
-                                                <pre><h6 style="margin: 3%">{{ line }}</h6></pre>
+                                                {% if workflow_instance.current_state.name in line %}
+                                                    <pre><h6 style="margin: 3%; font-weight: bold;">{{ line }}*</h6></pre>
+                                                {% else %}
+                                                    <pre><h6 style="margin: 3%">{{ line }}</h6></pre>
+                                                {% endif %}
                                             {% endfor %}
                                         </p>
                                     {% endif %}
