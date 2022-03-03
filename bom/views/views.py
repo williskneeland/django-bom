@@ -645,20 +645,19 @@ def part_info(request, part_id, part_revision_id=None):
             direction_in_workflow='backward'
         )
 
-        saved_img_filename = diagrams.workflow_img(
+        saved_img_path = diagrams.workflow_img(
             initial_state=workflow_instance.workflow.initial_state,
             forward_transitions=all_forward_transitions,
             filename=workflow_instance.workflow.name,
             dir=constants.CLASS_WORKFLOW_IMG_PATH
         )
 
-        if not saved_img_filename: # unable to create/find img
+        if not saved_img_path: # unable to create/find img
             workflow_str_lines = diagrams.workflow_str(
                 initial_state=workflow_instance.workflow.initial_state,
                 forward_transitions=all_forward_transitions
             )
-        else:
-            saved_img_path = 'bom/img/'+saved_img_filename
+        
 
         if workflow_instance.current_state.is_final_state:
 
