@@ -31,11 +31,11 @@ def workflow_img(initial_state, forward_transitions, filename, dir):
         dir += '/'
     full_path = dir+filename
     if path.exists(full_path):
-        return filename
+        return full_path
     else: # diagram doesn't exist, try to create it
         try:
             DotExporter(root).to_picture(full_path)
-            return filename
+            return full_path
         except:
             return False
 
