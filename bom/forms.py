@@ -348,7 +348,6 @@ class PartClassForm(forms.ModelForm):
         super(PartClassForm, self).__init__(*args, **kwargs)
         self.fields['code'].required = False
         self.fields['name'].required = False
-        #self.fields['workflow'] = forms.ModelChoiceField(label='Workflow', queryset=PartClassWorkflow.objects.all(), required=False)
         self.fields['workflow'].required = False
         self.fields['code'].validators.extend([MaxLengthValidator(self.organization.number_class_code_len), MinLengthValidator(self.organization.number_class_code_len)])
 
@@ -852,7 +851,7 @@ class CreatePartClassWorkflowStateForm(forms.ModelForm):
 class PartClassWorkflowStateChangeForm(forms.ModelForm):
     class Meta:
         model = PartClassWorkflowCompletedTransition
-        fields = ['transition', 'comments']
+        fields = ['transition', 'comments', 'notify_next_user']
 
     def __init__(self, *args, **kwargs):
         try:
@@ -882,55 +881,13 @@ class PartClassWorkflowStateChangeForm(forms.ModelForm):
         else:
             self.fields['transition'] = forms.ModelChoiceField(PartClassWorkflowStateTransition.objects.all(), initial=0, label='Transition', required=False)
 
-
         if final_transition:
             self.fields['comments'] = forms.CharField(label="Comments. Final State: Workflow Finished!", widget=forms.Textarea, required=False)
+            self.fields['notify_next_user'] = forms.BooleanField(widget=forms.HiddenInput(), required=False)
         else:
             self.fields['comments'] = forms.CharField(label="Comments", widget=forms.Textarea, required=False)
+            self.fields['notify_next_user'] = forms.BooleanField(label="Notify next user?", required=False, initial=True)
 
-
-# class RejectPartClassStateTransitionForm(forms.ModelForm):
-#     class Meta:
-#         model = PartClassWorkflowCompletedTransition
-#         fields = ['transition', 'comments']
-#
-#     def __init__(self, *args, **kwargs):
-#         super(RejectPartClassStateTransitionForm, self).__init__(*args, **kwargs)
-
-
-
-
-#
-# class SubmitPartClassWorkflowStateForm(forms.ModelForm):
-#     class Meta:
-#         model = PartClassWorkflowCompletedTransition
-#         fields = ['transition', 'comments']
-#
-#     def __init__(self, *args, **kwargs):
-#         try:
-#             next_transitions = kwargs.pop('next_transitions')
-#         except KeyError:
-#             next_transitions = PartClassWorkflowStateTransition.objects.all()
-#
-#         super(SubmitPartClassWorkflowStateForm, self).__init__(*args, **kwargs)
-#         self.fields['transition'] = forms.ModelChoiceField(queryset=next_transitions, label='Transition', required=True)
-#         self.fields['comments'] = forms.CharField(label='Comments on Current Stage', required=False)
-#
-#
-# class RejectPartClassWorkflowStateForm(forms.ModelForm):
-#     class Meta:
-#         model = PartClassWorkflowCompletedTransition
-#         fields = ['transition', 'comments']
-#
-#     def __init__(self, *args, **kwargs):
-#         try:
-#             previous__states = kwargs.pop('previous_states')
-#         except KeyError:
-#             previous__states = [()]
-#
-#         super(RejectPartClassWorkflowStateForm, self).__init__(*args, **kwargs)
-#         self.fields['transition'] = forms.ChoiceField(choices=previous__states, label='State to return to', required=True)
-#         self.fields['comments'] = forms.CharField(label='Comments on Current Stage', required=False)
 
 class PartFormSemiIntelligent(forms.ModelForm):
     class Meta:
