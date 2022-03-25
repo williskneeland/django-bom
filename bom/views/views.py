@@ -615,7 +615,7 @@ def part_info(request, part_id, part_revision_id=None):
             selected_transition = change_state_form.cleaned_data['transition']
             comments = change_state_form.cleaned_data['comments']
 
-            if change_state_form.cleaned_data['notifying_next_user']:
+            if change_state_form.cleaned_data['notifying_next_user'] and not selected_transition.is_final_state:
                 message_context = {
                     'assigned_user': user.first_name,
                     'part': part,
@@ -636,7 +636,6 @@ def part_info(request, part_id, part_revision_id=None):
                     html_message=html_message,
                     fail_silently=True,
                 )
-                return HttpResponse(html_message)
 
             completed_transition = PartClassWorkflowCompletedTransition(
                 transition=selected_transition,
