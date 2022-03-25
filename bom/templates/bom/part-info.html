@@ -454,7 +454,7 @@
                                         {% include 'bom/bom-form-modal.html' with modal_title='Approve Current Stage' form=submit_state_form action=change_state_form_action name='submit-workflow-state' %}
                                     </div>
 
-                                    {% if backward_transitions and backward_transitions|length > 0 %}
+                                    {% if current_backward_transitions and current_backward_transitions|length > 0 %}
                                         <div style="float: left">
                                             {% include 'bom/bom-form-modal.html' with modal_title='Reject Current Stage' form=reject_state_form action=change_state_form_action name='reject-workflow-state' %}
                                         </div>

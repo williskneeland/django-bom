@@ -637,7 +637,7 @@ def part_info(request, part_id, part_revision_id=None):
                     html_message=html_message,
                     fail_silently=True,
                 )
-                
+
             completed_transition = PartClassWorkflowCompletedTransition(
                 transition=selected_transition,
                 completed_by=user,
@@ -654,6 +654,7 @@ def part_info(request, part_id, part_revision_id=None):
             else:
                 workflow_instance.current_state = selected_transition.target_state
                 workflow_instance.save()
+                return HttpResponseRedirect(reverse('bom:part-info', kwargs={'part_id': part_id})+'#workflow')
 
 
     completed_transitions = PartClassWorkflowCompletedTransition.objects.filter(part=part)
