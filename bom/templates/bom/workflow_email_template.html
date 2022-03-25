@@ -13,8 +13,8 @@
         <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     </head>
     <body>
-        <h1 style="text-decoration: underline; text-decoration-color: #67ba6a; width: auto;">You've been assigned to a task in IndaBOM!</h1>
-        <h3>Hey {% if assigned_user %}{{ assigned_user }}{% else %}there{% endif %}, you have been assigned to {% if transition_name %}'{{ transition_name }}'{% else %} a task{% endif %} in the workflow for part {{ part }} in IndaBOM.</h3>
+        <h3>Hey {% if assigned_user %}{{ assigned_user }}{% else %}there{% endif %}!</h3>
+        <h3>You have been assigned to {% if transition_name %}'{{ transition_name }}'{% else %} a task{% endif %} in the workflow for part {{ part }} in IndaBOM.</h3>
         <br />
         {% if comments and comments|length > 0 %}
         <table style="border: none;">
@@ -24,5 +24,7 @@
             </tr>
         </table>
         {% endif %}
+        <a style="border: 1px solid #67ba6a; border-radius: 4px; background: #67ba6a; color: white; padding: 10px; padding: 15px; text-decoration: none;" href="{{part_info_url}}"><strong>VIEW PART</strong></a>
+
     </body>
 </html>
