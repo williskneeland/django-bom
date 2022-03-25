@@ -622,7 +622,7 @@ def part_info(request, part_id, part_revision_id=None):
                     'previous_assigned_user': selected_transition.source_state.assigned_user.first_name,
                     'comments': comments,
                     'transition_name': selected_transition.source_state.name,
-                    'part_info_url': f'http://{request.get_host()}/bom/part/{part.id}/#sourcing'
+                    'part_info_url': f'http://{request.get_host()}/bom/part/{part.id}/#workflow'
                 }
 
                 html_message = render_to_string('bom/workflow_email_template.html', message_context)
