@@ -615,15 +615,16 @@ def part_info(request, part_id, part_revision_id=None):
             selected_transition = change_state_form.cleaned_data['transition']
             comments = change_state_form.cleaned_data['comments']
 
-            if change_state_form.cleaned_data['notifying_next_user'] and not selected_transition.is_final_state:
+            if change_state_form.cleaned_data['notifying_next_user'] and not selected_transition.source_state.is_final_state:
                 message_context = {
                     'assigned_user': user.first_name,
                     'part': part,
                     'previous_assigned_user': selected_transition.source_state.assigned_user.first_name,
                     'comments': comments,
-                    'transition_name': selected_transition.source_state.name,
+                    'transition_name': selected_transition.target_state.name,
                     'part_info_url': f'http://{request.get_host()}/bom/part/{part.id}/#workflow'
                 }
+
 
                 html_message = render_to_string('bom/workflow_email_template.html', message_context)
                 plain_message = strip_tags(html_message)
@@ -636,7 +637,7 @@ def part_info(request, part_id, part_revision_id=None):
                     html_message=html_message,
                     fail_silently=True,
                 )
-
+                
             completed_transition = PartClassWorkflowCompletedTransition(
                 transition=selected_transition,
                 completed_by=user,
