@@ -423,6 +423,8 @@ class PartClassWorkflowCompletedTransition(models.Model):
     comments = models.CharField(max_length=500, null=True, blank=True, default='')
     timestamp = models.DateTimeField(auto_now_add=True, blank=True)
     part = models.ForeignKey(Part, null=False, default=None, on_delete=models.CASCADE)
+    notifying_next_user = models.BooleanField(default=True, verbose_name="Notifying next user")
+    #do_not_load = models.BooleanField(default=False, verbose_name='Do Not Load')
 
     class Meta:
         ordering = ('-timestamp', )

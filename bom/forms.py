@@ -851,7 +851,7 @@ class CreatePartClassWorkflowStateForm(forms.ModelForm):
 class PartClassWorkflowStateChangeForm(forms.ModelForm):
     class Meta:
         model = PartClassWorkflowCompletedTransition
-        fields = ['transition', 'comments', 'notify_next_user']
+        fields = ['transition', 'comments', 'notifying_next_user']
 
     def __init__(self, *args, **kwargs):
         try:
@@ -883,10 +883,10 @@ class PartClassWorkflowStateChangeForm(forms.ModelForm):
 
         if final_transition:
             self.fields['comments'] = forms.CharField(label="Comments. Final State: Workflow Finished!", widget=forms.Textarea, required=False)
-            self.fields['notify_next_user'] = forms.BooleanField(widget=forms.HiddenInput(), required=False)
+            self.fields['notifying_next_user'] = forms.BooleanField(widget=forms.HiddenInput(), required=False)
         else:
             self.fields['comments'] = forms.CharField(label="Comments", widget=forms.Textarea, required=False)
-            self.fields['notify_next_user'] = forms.BooleanField(label="Notify next user?", required=False, initial=True)
+            self.fields['notifying_next_user'] = forms.BooleanField(label="Notify next user?", required=False, initial=True)
 
 
 class PartFormSemiIntelligent(forms.ModelForm):

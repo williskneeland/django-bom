@@ -85,7 +85,6 @@ from bom.models import (
     PartClassWorkflowCompletedTransition
 )
 from bom.utils import check_references_for_duplicates, listify_string, prep_for_sorting_nicely, stringify_list
-
 import bom.state_diagram_builder as diagrams
 
 import json
@@ -608,9 +607,52 @@ def part_info(request, part_id, part_revision_id=None):
             if not change_state_form.is_valid():
                 return HttpResponse(change_state_form.errors['transition'])
 
-            
+
+            from django.core.mail import send_mail
+            from django.conf import settings
+            from django.template.loader import render_to_string
+            from django.utils.html import strip_tags
+
+            from django.template import Context
+            from django.template.loader import get_template
+            from django.core.mail import EmailMessage
+
             selected_transition = change_state_form.cleaned_data['transition']
             comments = change_state_form.cleaned_data['comments']
+
+            if change_state_form.cleaned_data['notifying_next_user']:
+
+
+                message_context = {
+                    'assigned_user': user.first_name,
+                    'part': part,
+                    'previous_assigned_user': selected_transition.source_state.assigned_user.first_name,
+                    'comments': comments,
+                    'transition_name': selected_transition.source_state.name,
+                }
+
+                html_message = render_to_string('bom/workflow_email_template.html', message_context)
+                plain_message = strip_tags(html_message)
+
+                send_mail(
+                    subject="test",
+                    message=plain_message,
+                    from_email=settings.EMAIL_HOST_USER,
+                    recipient_list=['williskneeland1234@gmail.com'],
+                    html_message=html_message
+                )
+                # message = get_template('bom/workflow_email_template.html').render({})
+                # msg = EmailMessage(
+                #     'test subject',
+                #     message,
+                #     settings.EMAIL_HOST_USER,
+                #     ['williskneeland1234@gmail.com'],
+                # )
+                # msg.content_subtype = "html"
+                # msg.send()
+                return HttpResponse(html_message)
+
+
 
             completed_transition = PartClassWorkflowCompletedTransition(
                 transition=selected_transition,
@@ -619,7 +661,7 @@ def part_info(request, part_id, part_revision_id=None):
                 part=part
             )
             completed_transition.save()
-            
+
             # Should workflow instance be deleted after finishing?
             if workflow_instance.current_state.is_final_state:
                 workflow_instance.delete()
@@ -628,11 +670,11 @@ def part_info(request, part_id, part_revision_id=None):
             else:
                 workflow_instance.current_state = selected_transition.target_state
                 workflow_instance.save()
-             
+
 
     completed_transitions = PartClassWorkflowCompletedTransition.objects.filter(part=part)
     if workflow_instance:
-        
+
 
         #current_forward_transitions = all_forward_transitions.filter(source_state=workflow_instance.current_state)
 
@@ -648,12 +690,12 @@ def part_info(request, part_id, part_revision_id=None):
         # if saved_img_filename:
         #     saved_img_path='bom/img/'+saved_img_filename
         # else:
-        
+
         all_forward_transitions = PartClassWorkflowStateTransition.objects.filter(
             workflow=workflow_instance.workflow,
             direction_in_workflow='forward'
         )
-        
+
         workflow_str_lines = diagrams.workflow_str(
             initial_state=workflow_instance.workflow.initial_state,
             forward_transitions=all_forward_transitions

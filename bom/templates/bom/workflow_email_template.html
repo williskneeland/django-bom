@@ -1,0 +1,28 @@
+<html>
+{% load static %}
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+
+        <!-- Materialize, eventually pull this into the project -->
+        <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+        <link type="text/css" rel="stylesheet" href="{% static 'bom/css/materialize.min.css' %}" media="screen,projection"/>
+
+        <!--Let browser know website is optimized for mobile-->
+        <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    </head>
+    <body>
+        <h1 style="text-decoration: underline; text-decoration-color: #67ba6a; width: auto;">You've been assigned to a task in IndaBOM!</h1>
+        <h3>Hey {% if assigned_user %}{{ assigned_user }}{% else %}there{% endif %}, you have been assigned to {% if transition_name %}'{{ transition_name }}'{% else %} a task{% endif %} in the workflow for part {{ part }} in IndaBOM.</h3>
+        <br />
+        {% if comments and comments|length > 0 %}
+        <table style="border: none;">
+            <tr>
+                <td style="text-align: center; white-space: nowrap;">Comments from {% if previous_assigned_user %}{{ previous_assigned_user }}{% else %}the last user{% endif %} about the last step:</td>
+                <th style="text-align: left;">{{ comments }}</th>
+            </tr>
+        </table>
+        {% endif %}
+    </body>
+</html>
