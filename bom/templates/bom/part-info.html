@@ -511,23 +511,53 @@
                             </li>
                             <li class="collection-item">
                                 <div class="row">
+                                    <script>
+
+                                        function optionButtonClicked(optionName, confirmMsg=null) {
+                                            if (confirmMsg) {
+                                                if (!confirm(confirmMsg)){
+                                                    return;
+                                                }
+                                            }
+
+                                            const form = document.createElement("form");
+                                            form.path = window.location.href;
+                                            form.method = "post";
+
+                                            const csrf = document.createElement("input");
+                                            csrf.setAttribute("type", "hidden");
+                                            csrf.setAttribute("value", "{{ csrf_token }}");
+                                            csrf.setAttribute("name", "csrfmiddlewaretoken");
+                                            form.appendChild(csrf);
+
+                                            const input = document.createElement("input");
+                                            input.setAttribute("type", "hidden");
+                                            input.setAttribute("name", optionName);
+                                            form.appendChild(input);
+
+                                            document.body.appendChild(form);
+                                            form.submit();
+                                        }
+                                    </script>
+
                                     {% if user.is_superuser or profile.role == 'A' %}
                                         {% if completed_transitions|length > 0 %}
-                                            <a href="#" class="waves-effect waves-light btn green lighten-1">Clear All Logs</a>
+                                            <a href="javascript:optionButtonClicked('clear_workflow_logs', 'Clear all workflow logs for {{ part }}?')" class="waves-effect waves-light btn green lighten-1">Clear All Logs</a>
                                         {% endif %}
                                         {% if workflow_instance %}
-                                                <a href="#" class="waves-effect waves-light btn green lighten-1">Force Finish Workflow</a>
 
-                                                {% if backward_transitions and backward_transitions|length > 0 %}
-                                                    <a href="#" class="waves-effect waves-light btn green lighten-1">Force Reject State</a>
+                                                <a type="button" href="javascript:optionButtonClicked('force_finish_workflow', 'Force finish workflow for {{ part }}?')" class="waves-effect waves-light btn green lighten-1">Force Finish Workflow</a>
+
+                                                {% if current_backward_transitions and current_backward_transitions|length > 0 %}
+                                                    <a type="button" href="javascript:optionButtonClicked('force_reject_state', 'Force workflow to previous step? {{ part }}?')" class="waves-effect waves-light btn green lighten-1">Force Reject State</a>
                                                 {% endif %}
-                                                <a href="#" class="waves-effect waves-light btn green lighten-1">Force Approve State</a>
+                                                <a type="button" href="javascript:optionButtonClicked('force_approve_state', 'Force workflow to next step?')" class="waves-effect waves-light btn green lighten-1">Force Approve State</a>
                                         {% endif %}
 
                                     {% endif %}
                                     {% if user.is_superuser or profile.role == 'A' or workflow_instance %}
                                         {% if user == workflow_instance.current_state.assigned_user %}
-                                            <a href="#" class="waves-effect waves-light btn green lighten-1">Change Assigned User(not working)</a>
+                                            <a href="#" class="waves-effect waves-light btn green lighten-1">Assign different user</a>
                                         {% endif %}
                                     {% endif %}
                                 </div>

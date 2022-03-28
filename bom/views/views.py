@@ -656,6 +656,17 @@ def part_info(request, part_id, part_revision_id=None):
                 workflow_instance.save()
                 return HttpResponseRedirect(reverse('bom:part-info', kwargs={'part_id': part_id})+'#workflow')
 
+        if 'force_approve_state' in request.POST:
+            return HttpResponse("force approve")
+
+        if 'force_reject_state' in request.POST:
+            return HttpResponse("force reject")
+
+        if 'force_finish_workflow' in request.POST:
+            return HttpResponse("force finish")
+
+        if 'clear_workflow_logs' in request.POST:
+            return HttpResponse("force clear")
 
     completed_transitions = PartClassWorkflowCompletedTransition.objects.filter(part=part)
     if workflow_instance:
