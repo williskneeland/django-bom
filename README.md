@@ -116,6 +116,34 @@ cp bom/local_settings.py.example bom/local_settings.py
 python manage.py runserver
 ```
 
+## Setting up email notifications for part workflows
+Each time a user is assigned to a new task in a workflow, they can be notified via email. The email will contain details about the workflow, as well as any previous comments from the last step in the workflow. To get this working, we'll need to configure Django to connect to a [SMTP](https://en.wikipedia.org/wiki/Simple_Mail_Transfer_Protocol) server domain.
+1. Add the following settings to the end of the settings.py file of your project:
+```
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = ''
+EMAIL_PORT = 587 # Default port for most SMTP servers
+EMAIL_USE_TLS = True # Mandatory for personal email providers
+EMAIL_HOST_USER = ''
+EMAIL_HOST_PASSWORD = ''
+```
+  The ```EMAIL_HOST``` variable refers to the SMTP server domain to use. Three common providers are:
+  |Provider|SMTP Host|
+  |:---:|:---:|
+  |Gmail|'smtp.gmail.com'|
+  |Outlook|'smtp-mail.outlook.com'|
+  |Yahoo|'smtp.yahoo.com'|
+  
+  For this example, we'll be using Gmail (smtp.gmail.com), however the setup should be similar for other providers.
+  
+  Leave both the ```EMAIL_HOST_USER``` and ```EMAIL_HOST_PASSWORD``` blank for now. We'll use [Django Environ](https://django-environ.readthedocs.io/en/latest/) to avoid setting these credentials directly in the code.
+
+2. Get a Gmail app password  
+  
+You can do this by going to ```myaccount.google.com```, navigating to Security, and selecting App passwords. You must also have two-factor authentication set up, since it's required to get an app password. Then click on ```select app```, choose a custom name for the app password, for example "Django Email", and hit Generate.
+
+3. Hiding user and password credentials with Django Environ
+
 ## Customize Base Template
 The base template can be customized to your pleasing. Just add the following configuration to your settings.py:
 
