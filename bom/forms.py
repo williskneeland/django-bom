@@ -832,22 +832,6 @@ class CreatePartClassWorkflowStateForm(forms.ModelForm):
         self.fields['assigned_user'] = forms.ModelChoiceField(label='Assigned User', queryset=get_user_model().objects.all(), required=True)
 
 
-# class SubmitPartClassWorkflowStateForm(forms.ModelForm):
-#
-#     class Meta:
-#         model = PartClassWorkflowCompletedTransition
-#         fields = ['part', 'completed_by', 'transition', 'comments']
-#
-#     def __init__(self, next_transitions, completed_by, part, *args, **kwargs):
-#         super(SubmitPartClassWorkflowStateForm, self).__init__(*args, **kwargs)
-#         self.fields['completed_by'] = forms.CharField(label='Completed By', disabled=True, initial=completed_by.first_name)
-#         self.fields['part'] = forms.CharField(label='Part', disabled=True, initial=part)
-#         self.fields['comments'] = forms.CharField(label=f"Comments", widget=forms.Textarea, required=False)
-#         self.fields['transition'] = forms.ModelChoiceField(label='Transition', queryset=next_transitions, initial=next_transitions.first())
-#
-#         self.fields['completed_by'].widget.attrs['readonly'] = True
-#         self.fields['part'].widget.attrs['readonly'] = True
-
 class PartClassWorkflowStateChangeForm(forms.ModelForm):
     class Meta:
         model = PartClassWorkflowCompletedTransition

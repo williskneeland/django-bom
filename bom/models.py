@@ -429,19 +429,6 @@ class PartClassWorkflowCompletedTransition(models.Model):
     class Meta:
         ordering = ('-timestamp', )
 
-    # @staticmethod
-    # def get_last_states(part, state):
-    #     last_states = []
-    #     for completed_transition in PartClassWorkflowCompletedTransition.objects.filter(part=part):
-    #         cur_source = completed_transition.transition.source_state
-    #         cur_target = completed_transition.transition.target_state
-    #
-    #         if cur_target == state and (cur_source, cur_source) not in last_states:
-    #             last_states.append((cur_source, cur_source))
-    #
-    #
-    #     return last_states
-
 
     def __str__(self):
         return "({})->({}) completed by: {}".format(

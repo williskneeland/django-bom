@@ -613,6 +613,9 @@ def part_info(request, part_id, part_revision_id=None):
                 messages.error(request, f"An error occured: {change_state_form.errors['transition']}")
 
             selected_transition = change_state_form.cleaned_data['transition']
+            if selected_transition is None:
+                messages.error(request, "Error, please select a transition")
+                return HttpResponseRedirect(reverse('bom:part-info', kwargs={'part_id': part_id})+'#workflow')
             comments = change_state_form.cleaned_data['comments']
 
             if change_state_form.cleaned_data['notifying_next_user'] and not selected_transition.source_state.is_final_state:
@@ -633,7 +636,7 @@ def part_info(request, part_id, part_revision_id=None):
                     subject=f"[IndaBOM] New Task For Part {part}!",
                     message=plain_message,
                     from_email=settings.EMAIL_HOST_USER,
-                    recipient_list=['williskneeland1234@gmail.com'],
+                    recipient_list=[selected_transition.assigned_user.email],
                     html_message=html_message,
                     fail_silently=True,
                 )
@@ -647,7 +650,7 @@ def part_info(request, part_id, part_revision_id=None):
             completed_transition.save()
 
             # Should workflow instance be deleted after finishing?
-            if workflow_instance.current_state.is_final_state:
+            if workflow_instance.current_state.is_final_state and selected_transition.direction_in_workflow == "forward":
                 workflow_instance.delete()
                 messages.success(request, f"Workflow for {part} completed!")
                 return HttpResponseRedirect(reverse('bom:part-info', kwargs={'part_id': part_id}))
