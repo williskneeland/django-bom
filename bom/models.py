@@ -431,12 +431,9 @@ class PartClassWorkflowCompletedTransition(models.Model):
 
 
     def __str__(self):
-        return "({})->({}) completed by: {}".format(
-            self.transition.source_state,
-            self.transition.target_state,
-            self.transition.source_state.assigned_user
-        )
-
+        if self.transition is not None:
+            return f"{self.transition.source_state})->({self.transition.target_state}) completed by: {self.transition.source_state.assigned_user}"
+        return f"Completed workflow for {self.part}"
 
 
 # Below are attributes of a part that can be changed, but it's important to trace the change over time

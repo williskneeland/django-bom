@@ -636,7 +636,7 @@ def part_info(request, part_id, part_revision_id=None):
                     subject=f"[IndaBOM] New Task For Part {part}!",
                     message=plain_message,
                     from_email=settings.EMAIL_HOST_USER,
-                    recipient_list=[selected_transition.assigned_user.email],
+                    recipient_list=[selected_transition.target_state.assigned_user.email],
                     html_message=html_message,
                     fail_silently=True,
                 )
