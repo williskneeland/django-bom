@@ -102,7 +102,7 @@ def form_error_messages(form_errors) -> [str]:
         for error_message in errors:
             error_messages.append(str(error_message.message))
 
-@login_required
+@login_required(login_url="login")
 def home(request):
     profile = request.user.bom_profile()
     organization = profile.organization
