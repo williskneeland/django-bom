@@ -578,7 +578,6 @@ def part_info(request, part_id, part_revision_id=None):
 
     workflow_instance = PartWorkflowInstance.objects.filter(part=part).first()
 
-
     part_revision = None
     if part_revision_id is None:
         part_revision = part.latest()
@@ -606,16 +605,20 @@ def part_info(request, part_id, part_revision_id=None):
         if part_info_form.is_valid():
             qty = request.POST.get('quantity', 100)
 
-        if workflow_instance and ('submit-workflow-state' in request.POST or 'reject-workflow-state' in request.POST):
+        submitting_state = 'submit-workflow-state' in request.POST
+        rejecting_state = 'reject-workflow-state' in request.POST
+
+        if workflow_instance and (submitting_state or rejecting_state):
             change_state_form = PartClassWorkflowStateChangeForm(request.POST)
 
             if not change_state_form.is_valid():
                 messages.error(request, f"An error occured: {change_state_form.errors['transition']}")
 
             selected_transition = change_state_form.cleaned_data['transition']
-            if selected_transition is None:
+            if selected_transition is None and not workflow_instance.current_state.is_final_state:
                 messages.error(request, "Error, please select a transition")
                 return HttpResponseRedirect(reverse('bom:part-info', kwargs={'part_id': part_id})+'#workflow')
+
             comments = change_state_form.cleaned_data['comments']
 
             if change_state_form.cleaned_data['notifying_next_user'] and not selected_transition.source_state.is_final_state:
@@ -650,7 +653,11 @@ def part_info(request, part_id, part_revision_id=None):
             completed_transition.save()
 
             # Should workflow instance be deleted after finishing?
-            if workflow_instance.current_state.is_final_state and selected_transition.direction_in_workflow == "forward":
+            # if workflow_instance.current_state.is_final_state and selected_transition.direction_in_workflow == "forward":
+            #     workflow_instance.delete()
+            #     messages.success(request, f"Workflow for {part} completed!")
+            #     return HttpResponseRedirect(reverse('bom:part-info', kwargs={'part_id': part_id}))
+            if workflow_instance.current_state.is_final_state and submitting_state:
                 workflow_instance.delete()
                 messages.success(request, f"Workflow for {part} completed!")
                 return HttpResponseRedirect(reverse('bom:part-info', kwargs={'part_id': part_id}))
@@ -664,12 +671,6 @@ def part_info(request, part_id, part_revision_id=None):
 
         if 'force_reject_state' in request.POST:
             return HttpResponse("force reject")
-
-        if 'force_finish_workflow' in request.POST:
-            return HttpResponse("force finish")
-
-        if 'clear_workflow_logs' in request.POST:
-            return HttpResponse("force clear")
 
     completed_transitions = PartClassWorkflowCompletedTransition.objects.filter(part=part)
     if workflow_instance:
