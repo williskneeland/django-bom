@@ -393,9 +393,6 @@ class Part(models.Model):
         return u'%s' % (self.full_part_number())
 
 
-
-
-
 class PartClassWorkflowStateTransition(models.Model):
     workflow = models.ForeignKey(PartClassWorkflow, null=False, default=None, on_delete=models.CASCADE)
     source_state = models.ForeignKey(PartClassWorkflowState, null=False, on_delete=models.CASCADE, related_name='source_state')
@@ -406,7 +403,7 @@ class PartClassWorkflowStateTransition(models.Model):
         unique_together = (('source_state', 'target_state', 'workflow'))
 
     def __str__(self):
-        return '{} -> {} (assign to {})'.format(self.source_state, self.target_state, self.target_state.assigned_user)
+        return '{} -> {}'.format(self.source_state, self.target_state)
 
 
 class PartWorkflowInstance(models.Model):

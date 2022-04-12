@@ -623,7 +623,7 @@ def part_info(request, part_id, part_revision_id=None):
             comments = change_state_form.cleaned_data['comments']
 
             if change_state_form.cleaned_data['notifying_next_users'] and not selected_transition.source_state.is_final_state:
-                for assigned_user in achange_state_form.cleaned_data['assigned_users'].all():
+                for assigned_user in selected_transition.source_state.assigned_users.all():
                     message_context = {
                         'assigned_user': assigned_user,
                         'part': part,
@@ -655,11 +655,6 @@ def part_info(request, part_id, part_revision_id=None):
             )
             completed_transition.save()
 
-            # Should workflow instance be deleted after finishing?
-            # if workflow_instance.current_state.is_final_state and selected_transition.direction_in_workflow == "forward":
-            #     workflow_instance.delete()
-            #     messages.success(request, f"Workflow for {part} completed!")
-            #     return HttpResponseRedirect(reverse('bom:part-info', kwargs={'part_id': part_id}))
             if workflow_instance.current_state.is_final_state and submitting_state:
                 workflow_instance.delete()
                 messages.success(request, f"Workflow for {part} completed!")
@@ -677,6 +672,7 @@ def part_info(request, part_id, part_revision_id=None):
 
     completed_transitions = PartClassWorkflowCompletedTransition.objects.filter(part=part)
     if workflow_instance:
+        is_assigned_user = request.user in workflow_instance.current_state.assigned_users.all()
         all_forward_transitions = PartClassWorkflowStateTransition.objects.filter(
             workflow=workflow_instance.workflow,
             direction_in_workflow='forward'

@@ -450,7 +450,7 @@
                                 </div>
                             </div>
 
-                            {% if user == workflow_instance.current_state.assigned_user %}
+                            {% if is_assigned_user %}
                                 <div class="row">
                                     <div style="float: right;">
                                         {% include 'bom/bom-form-modal.html' with modal_title='Approve Current Stage' form=submit_state_form action=change_state_form_action name='submit-workflow-state' %}

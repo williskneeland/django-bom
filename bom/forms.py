@@ -869,10 +869,10 @@ class PartClassWorkflowStateChangeForm(forms.ModelForm):
 
         if final_transition:
             self.fields['comments'] = forms.CharField(label="Comments. Final State: Workflow Finished!", widget=forms.Textarea, required=False)
-            self.fields['notifying_next_user'] = forms.BooleanField(widget=forms.HiddenInput(), required=False)
+            self.fields['notifying_next_users'] = forms.BooleanField(widget=forms.HiddenInput(), required=False)
         else:
             self.fields['comments'] = forms.CharField(label="Comments", widget=forms.Textarea, required=False)
-            self.fields['notifying_next_user'] = forms.BooleanField(label="Notify next user?", required=False, initial=True)
+            self.fields['notifying_next_users'] = forms.BooleanField(label="Notify next users?", required=False, initial=True)
 
 
 class PartFormSemiIntelligent(forms.ModelForm):
