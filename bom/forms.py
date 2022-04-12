@@ -820,16 +820,18 @@ class PartClassWorkflowStateForm(forms.ModelForm):
         self.fields['name'] = forms.ModelChoiceField(queryset=PartClassWorkflowState.objects.all(), required=True)
 
 
+from django_select2.forms import Select2MultipleWidget
+from django.contrib.auth.models import User
 class CreatePartClassWorkflowStateForm(forms.ModelForm):
     class Meta:
         model = PartClassWorkflowState
-        fields = ['name', 'assigned_user', 'is_final_state']
+        fields = ['name', 'assigned_users', 'is_final_state']
 
     def __init__(self, *args, **kwargs):
         super(CreatePartClassWorkflowStateForm, self).__init__(*args, **kwargs)
         self.fields['name'] = forms.CharField(label='State Name', required=True)
         self.fields['is_final_state'] = forms.ChoiceField(label='Final State in Workflow?', choices=((False, 'No'), (True, 'Yes')), widget=forms.Select(), required=True)
-        self.fields['assigned_user'] = forms.ModelChoiceField(label='Assigned User', queryset=get_user_model().objects.all(), required=True)
+        self.fields['assigned_users'] = forms.MultipleChoiceField(label='Assigned Users', choices=[(i.id, i) for i in get_user_model().objects.all()], widget=Select2MultipleWidget) #should be required
 
 
 class PartClassWorkflowStateChangeForm(forms.ModelForm):

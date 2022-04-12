@@ -38,7 +38,7 @@ class PartClassWorkflowAdmin(admin.ModelAdmin):
 class PartClassWorkflowStateAdmin(admin.ModelAdmin):
     list_display = (
         'name',
-        'assigned_user'
+        # 'assigned_users'
     )
 
 

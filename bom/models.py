@@ -137,7 +137,8 @@ class UserMeta(models.Model):
 class PartClassWorkflowState(models.Model):
     name = models.CharField(max_length=255, default='', null=True, blank=True)
     is_final_state = models.BooleanField(default=False, null=False)
-    assigned_user = models.ForeignKey(settings.AUTH_USER_MODEL, null=False, on_delete=models.DO_NOTHING, default=get_user_model().objects.first().pk)
+    # assigned_users = models.ForeignKey(settings.AUTH_USER_MODEL, null=False, on_delete=models.DO_NOTHING, default=get_user_model().objects.first().pk)
+    assigned_users = models.ManyToManyField(settings.AUTH_USER_MODEL)
 
     @staticmethod
     def get_all_states_tuple():

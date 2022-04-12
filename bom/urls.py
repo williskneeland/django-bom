@@ -71,6 +71,7 @@ urlpatterns = [
     path('', include('social_django.urls', namespace='social')),
     path('google-drive/', include((google_drive_patterns, 'google-drive'))),
     path('json/', include((json_patterns, 'json'))),
+    path('select2/', include('django_select2.urls')),
 
     # you will likely have your own implementation of these in your app
     path('admin/', admin.site.urls),
