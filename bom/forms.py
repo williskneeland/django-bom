@@ -78,6 +78,7 @@ from .utils import (
 from .validators import alphanumeric, decimal, numeric
 from django.contrib.auth import get_user_model
 from django.conf import settings
+from django_select2.forms import Select2MultipleWidget
 
 
 logger = logging.getLogger(__name__)
@@ -820,8 +821,7 @@ class PartClassWorkflowStateForm(forms.ModelForm):
         self.fields['name'] = forms.ModelChoiceField(queryset=PartClassWorkflowState.objects.all(), required=True)
 
 
-from django_select2.forms import Select2MultipleWidget
-from django.contrib.auth.models import User
+
 class CreatePartClassWorkflowStateForm(forms.ModelForm):
     class Meta:
         model = PartClassWorkflowState
@@ -831,13 +831,13 @@ class CreatePartClassWorkflowStateForm(forms.ModelForm):
         super(CreatePartClassWorkflowStateForm, self).__init__(*args, **kwargs)
         self.fields['name'] = forms.CharField(label='State Name', required=True)
         self.fields['is_final_state'] = forms.ChoiceField(label='Final State in Workflow?', choices=((False, 'No'), (True, 'Yes')), widget=forms.Select(), required=True)
-        self.fields['assigned_users'] = forms.MultipleChoiceField(label='Assigned Users', choices=[(i.id, i) for i in get_user_model().objects.all()], widget=Select2MultipleWidget) #should be required
+        self.fields['assigned_users'] = forms.MultipleChoiceField(label='Assigned Users', required=True, choices=[(i.id, i) for i in get_user_model().objects.all()], widget=Select2MultipleWidget) #should be required
 
 
 class PartClassWorkflowStateChangeForm(forms.ModelForm):
     class Meta:
         model = PartClassWorkflowCompletedTransition
-        fields = ['transition', 'comments', 'notifying_next_user']
+        fields = ['transition', 'comments', 'notifying_next_users']
 
     def __init__(self, *args, **kwargs):
         try:
