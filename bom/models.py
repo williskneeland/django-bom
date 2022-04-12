@@ -155,11 +155,9 @@ class PartClassWorkflowState(models.Model):
         return f'{self.name}'
 
 
-
 class PartClassWorkflow(models.Model):
     name = models.CharField(max_length=255, default=None, unique=True)
     initial_state = models.ForeignKey(PartClassWorkflowState, null=True, blank=True, default=None, on_delete=models.CASCADE)
-    # delete_after_completion = true/false
 
     def copy(self, full_part_number):
         workflow_copy = PartClassWorkflow(
@@ -173,21 +171,6 @@ class PartClassWorkflow(models.Model):
 
     def __str__(self):
         return self.name
-
-
-
-class PartClassWorkflowStateTransition(models.Model):
-    workflow = models.ForeignKey(PartClassWorkflow, null=False, default=None, on_delete=models.CASCADE)
-    source_state = models.ForeignKey(PartClassWorkflowState, null=False, on_delete=models.CASCADE, related_name='source_state')
-    target_state = models.ForeignKey(PartClassWorkflowState, null=False, on_delete=models.CASCADE, related_name='target_state')
-    direction_in_workflow = models.CharField(max_length=15, default='forward')
-
-    class Meta:
-        unique_together = (('source_state', 'target_state', 'workflow'))
-
-    def __str__(self):
-        return '{} -> {} (assign to {})'.format(self.source_state, self.target_state, self.target_state.assigned_user)
-
 
 
 class PartClass(models.Model):
@@ -409,6 +392,22 @@ class Part(models.Model):
         return u'%s' % (self.full_part_number())
 
 
+
+
+
+class PartClassWorkflowStateTransition(models.Model):
+    workflow = models.ForeignKey(PartClassWorkflow, null=False, default=None, on_delete=models.CASCADE)
+    source_state = models.ForeignKey(PartClassWorkflowState, null=False, on_delete=models.CASCADE, related_name='source_state')
+    target_state = models.ForeignKey(PartClassWorkflowState, null=False, on_delete=models.CASCADE, related_name='target_state')
+    direction_in_workflow = models.CharField(max_length=15, default='forward')
+
+    class Meta:
+        unique_together = (('source_state', 'target_state', 'workflow'))
+
+    def __str__(self):
+        return '{} -> {} (assign to {})'.format(self.source_state, self.target_state, self.target_state.assigned_user)
+
+
 class PartWorkflowInstance(models.Model):
     part = models.ForeignKey(Part, null=False, on_delete=models.CASCADE, default=None)
     workflow = models.ForeignKey(PartClassWorkflow, on_delete=models.CASCADE, default=None)
@@ -424,7 +423,6 @@ class PartClassWorkflowCompletedTransition(models.Model):
     timestamp = models.DateTimeField(auto_now_add=True, blank=True)
     part = models.ForeignKey(Part, null=False, default=None, on_delete=models.CASCADE)
     notifying_next_user = models.BooleanField(default=True, verbose_name="Notifying next user")
-    #do_not_load = models.BooleanField(default=False, verbose_name='Do Not Load')
 
     class Meta:
         ordering = ('-timestamp', )
