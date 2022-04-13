@@ -607,16 +607,12 @@ def part_info(request, part_id, part_revision_id=None):
         if part_info_form.is_valid():
             qty = request.POST.get('quantity', 100)
 
-        submitting_state = 'submit-workflow-state' in request.POST
-        rejecting_state = 'reject-workflow-state' in request.POST
-
-        if workflow_instance and (submitting_state or rejecting_state):
-            change_state_form = PartClassWorkflowStateChangeForm(request.POST)
-            return functions.change_workflow_state_and_redirect(request, part, workflow_instance, change_state_form)
+        if workflow_instance and ('submit-workflow-state' in request.POST or 'reject-workflow-state' in request.POST):
+            return functions.change_workflow_state_and_redirect(request, part, workflow_instance)
 
         if 'change-assigned-users' in request.POST:
             return HttpResponse("changing users")
-            
+
         if 'force_approve_state' in request.POST: # maybe implement this
             return HttpResponse("force approve")
 
@@ -625,7 +621,9 @@ def part_info(request, part_id, part_revision_id=None):
 
     completed_transitions = PartClassWorkflowCompletedTransition.objects.filter(part=part)
     if workflow_instance:
-        is_assigned_user = request.user in workflow_instance.current_state.assigned_users.all()
+        all_assigned_users = workflow_instance.current_state.assigned_users.all()
+        is_assigned_user = request.user in all_assigned_users
+        
         all_forward_transitions = PartClassWorkflowStateTransition.objects.filter(
             workflow=workflow_instance.workflow,
             direction_in_workflow='forward'
@@ -637,7 +635,6 @@ def part_info(request, part_id, part_revision_id=None):
         )
 
         current_forward_transitions = all_forward_transitions.filter(source_state=workflow_instance.current_state)
-
         current_backward_transitions = PartClassWorkflowStateTransition.objects.filter(
             workflow=workflow_instance.workflow,
             source_state=workflow_instance.current_state,
@@ -651,7 +648,7 @@ def part_info(request, part_id, part_revision_id=None):
 
         reject_state_form = PartClassWorkflowStateChangeForm(backward_transitions=current_backward_transitions)
         if user.is_superuser or profile.role == 'A' or is_assigned_user:
-            change_assigned_users_form = ChangeStateAssignedUsersForm(previous_assigned_users=workflow_instance.current_state.assigned_users.all())
+            change_assigned_users_form = ChangeStateAssignedUsersForm(previous_assigned_users=all_assigned_users)
             change_state_form_action = reverse('bom:part-info', kwargs={'part_id': part_id})
 
     try:

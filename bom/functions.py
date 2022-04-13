@@ -8,8 +8,12 @@ from django.conf import settings
 from bom.models import (
     PartClassWorkflowCompletedTransition,
 )
+from bom.forms import (
+    PartClassWorkflowStateChangeForm,
+)
 
-def change_workflow_state_and_redirect(request, part, workflow_instance, change_state_form):
+def change_workflow_state_and_redirect(request, part, workflow_instance):
+    change_state_form = PartClassWorkflowStateChangeForm(request.POST)
     if not change_state_form.is_valid():
         messages.error(request, f"An error occured: {change_state_form.errors['transition']}")
 
