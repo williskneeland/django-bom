@@ -102,7 +102,7 @@ def form_error_messages(form_errors) -> [str]:
         for error_message in errors:
             error_messages.append(str(error_message.message))
 
-@login_required
+@login_required(login_url="login")
 def home(request):
     profile = request.user.bom_profile()
     organization = profile.organization
@@ -577,7 +577,7 @@ def part_info(request, part_id, part_revision_id=None):
     change_state_form_action = reverse('bom:part-info', kwargs={'part_id': part_id})
 
     workflow_instance = PartWorkflowInstance.objects.filter(part=part).first()
-
+    # return HttpResponse(workflow_instance.current_state.assigned_users.all())
 
     part_revision = None
     if part_revision_id is None:
@@ -606,37 +606,46 @@ def part_info(request, part_id, part_revision_id=None):
         if part_info_form.is_valid():
             qty = request.POST.get('quantity', 100)
 
-        if workflow_instance and ('submit-workflow-state' in request.POST or 'reject-workflow-state' in request.POST):
+        submitting_state = 'submit-workflow-state' in request.POST
+        rejecting_state = 'reject-workflow-state' in request.POST
+
+        if workflow_instance and (submitting_state or rejecting_state):
             change_state_form = PartClassWorkflowStateChangeForm(request.POST)
 
             if not change_state_form.is_valid():
                 messages.error(request, f"An error occured: {change_state_form.errors['transition']}")
 
             selected_transition = change_state_form.cleaned_data['transition']
+            if selected_transition is None and not workflow_instance.current_state.is_final_state:
+                messages.error(request, "Error, please select a transition")
+                return HttpResponseRedirect(reverse('bom:part-info', kwargs={'part_id': part_id})+'#workflow')
+
             comments = change_state_form.cleaned_data['comments']
 
-            if change_state_form.cleaned_data['notifying_next_user'] and not selected_transition.source_state.is_final_state:
-                message_context = {
-                    'assigned_user': user.first_name,
-                    'part': part,
-                    'previous_assigned_user': selected_transition.source_state.assigned_user.first_name,
-                    'comments': comments,
-                    'transition_name': selected_transition.target_state.name,
-                    'part_info_url': f'http://{request.get_host()}/bom/part/{part.id}/#workflow'
-                }
+            if change_state_form.cleaned_data['notifying_next_users'] and not selected_transition.source_state.is_final_state:
+                for assigned_user in selected_transition.source_state.assigned_users.all():
+                    message_context = {
+                        'assigned_user': assigned_user,
+                        'part': part,
+                        # 'previous_assigned_user': selected_transition.source_state.assigned_user.first_name,
+                        'previous_assigned_user': request.user.get_full_name(),
+                        'comments': comments,
+                        'transition_name': selected_transition.target_state.name,
+                        'part_info_url': f'http://{request.get_host()}/bom/part/{part.id}/#workflow'
+                    }
 
 
-                html_message = render_to_string('bom/workflow_email_template.html', message_context)
-                plain_message = strip_tags(html_message)
+                    html_message = render_to_string('bom/workflow_email_template.html', message_context)
+                    plain_message = strip_tags(html_message)
 
-                send_mail(
-                    subject=f"[IndaBOM] New Task For Part {part}!",
-                    message=plain_message,
-                    from_email=settings.EMAIL_HOST_USER,
-                    recipient_list=['williskneeland1234@gmail.com'],
-                    html_message=html_message,
-                    fail_silently=True,
-                )
+                    send_mail(
+                        subject=f"[IndaBOM] New Task For Part {part}!",
+                        message=plain_message,
+                        from_email=settings.EMAIL_HOST_USER,
+                        recipient_list=[assigned_user.email],
+                        html_message=html_message,
+                        fail_silently=True,
+                    )
 
             completed_transition = PartClassWorkflowCompletedTransition(
                 transition=selected_transition,
@@ -646,8 +655,7 @@ def part_info(request, part_id, part_revision_id=None):
             )
             completed_transition.save()
 
-            # Should workflow instance be deleted after finishing?
-            if workflow_instance.current_state.is_final_state:
+            if workflow_instance.current_state.is_final_state and submitting_state:
                 workflow_instance.delete()
                 messages.success(request, f"Workflow for {part} completed!")
                 return HttpResponseRedirect(reverse('bom:part-info', kwargs={'part_id': part_id}))
@@ -662,14 +670,9 @@ def part_info(request, part_id, part_revision_id=None):
         if 'force_reject_state' in request.POST:
             return HttpResponse("force reject")
 
-        if 'force_finish_workflow' in request.POST:
-            return HttpResponse("force finish")
-
-        if 'clear_workflow_logs' in request.POST:
-            return HttpResponse("force clear")
-
     completed_transitions = PartClassWorkflowCompletedTransition.objects.filter(part=part)
     if workflow_instance:
+        is_assigned_user = request.user in workflow_instance.current_state.assigned_users.all()
         all_forward_transitions = PartClassWorkflowStateTransition.objects.filter(
             workflow=workflow_instance.workflow,
             direction_in_workflow='forward'

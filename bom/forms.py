@@ -78,6 +78,7 @@ from .utils import (
 from .validators import alphanumeric, decimal, numeric
 from django.contrib.auth import get_user_model
 from django.conf import settings
+from django_select2.forms import Select2MultipleWidget
 
 
 logger = logging.getLogger(__name__)
@@ -820,38 +821,23 @@ class PartClassWorkflowStateForm(forms.ModelForm):
         self.fields['name'] = forms.ModelChoiceField(queryset=PartClassWorkflowState.objects.all(), required=True)
 
 
+
 class CreatePartClassWorkflowStateForm(forms.ModelForm):
     class Meta:
         model = PartClassWorkflowState
-        fields = ['name', 'assigned_user', 'is_final_state']
+        fields = ['name', 'assigned_users', 'is_final_state']
 
     def __init__(self, *args, **kwargs):
         super(CreatePartClassWorkflowStateForm, self).__init__(*args, **kwargs)
         self.fields['name'] = forms.CharField(label='State Name', required=True)
         self.fields['is_final_state'] = forms.ChoiceField(label='Final State in Workflow?', choices=((False, 'No'), (True, 'Yes')), widget=forms.Select(), required=True)
-        self.fields['assigned_user'] = forms.ModelChoiceField(label='Assigned User', queryset=get_user_model().objects.all(), required=True)
+        self.fields['assigned_users'] = forms.MultipleChoiceField(label='Assigned Users', required=True, choices=[(i.id, i) for i in get_user_model().objects.all()], widget=Select2MultipleWidget) #should be required
 
-
-# class SubmitPartClassWorkflowStateForm(forms.ModelForm):
-#
-#     class Meta:
-#         model = PartClassWorkflowCompletedTransition
-#         fields = ['part', 'completed_by', 'transition', 'comments']
-#
-#     def __init__(self, next_transitions, completed_by, part, *args, **kwargs):
-#         super(SubmitPartClassWorkflowStateForm, self).__init__(*args, **kwargs)
-#         self.fields['completed_by'] = forms.CharField(label='Completed By', disabled=True, initial=completed_by.first_name)
-#         self.fields['part'] = forms.CharField(label='Part', disabled=True, initial=part)
-#         self.fields['comments'] = forms.CharField(label=f"Comments", widget=forms.Textarea, required=False)
-#         self.fields['transition'] = forms.ModelChoiceField(label='Transition', queryset=next_transitions, initial=next_transitions.first())
-#
-#         self.fields['completed_by'].widget.attrs['readonly'] = True
-#         self.fields['part'].widget.attrs['readonly'] = True
 
 class PartClassWorkflowStateChangeForm(forms.ModelForm):
     class Meta:
         model = PartClassWorkflowCompletedTransition
-        fields = ['transition', 'comments', 'notifying_next_user']
+        fields = ['transition', 'comments', 'notifying_next_users']
 
     def __init__(self, *args, **kwargs):
         try:
@@ -883,10 +869,10 @@ class PartClassWorkflowStateChangeForm(forms.ModelForm):
 
         if final_transition:
             self.fields['comments'] = forms.CharField(label="Comments. Final State: Workflow Finished!", widget=forms.Textarea, required=False)
-            self.fields['notifying_next_user'] = forms.BooleanField(widget=forms.HiddenInput(), required=False)
+            self.fields['notifying_next_users'] = forms.BooleanField(widget=forms.HiddenInput(), required=False)
         else:
             self.fields['comments'] = forms.CharField(label="Comments", widget=forms.Textarea, required=False)
-            self.fields['notifying_next_user'] = forms.BooleanField(label="Notify next user?", required=False, initial=True)
+            self.fields['notifying_next_users'] = forms.BooleanField(label="Notify next users?", required=False, initial=True)
 
 
 class PartFormSemiIntelligent(forms.ModelForm):

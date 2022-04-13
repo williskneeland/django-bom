@@ -13,7 +13,7 @@
         <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     </head>
     <body>
-        <h3>Hey {% if assigned_user %}{{ assigned_user }}{% else %}there{% endif %}!</h3>
+        <h3>Hey {% if assigned_user %}{{ assigned_user.first_name }}{% else %}there{% endif %}!</h3>
         <h3>You have been assigned to {% if transition_name %}'{{ transition_name }}'{% else %} a task{% endif %} in the workflow for part {{ part }} in IndaBOM.</h3>
         <br />
         {% if comments and comments|length > 0 %}

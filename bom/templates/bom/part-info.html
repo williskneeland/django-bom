@@ -433,11 +433,13 @@
                                             <div class="col s8 l10">{{ workflow_instance.current_state }}</div>
                                         </div>
                                         <div class="row">
-                                                <div class="col s4 l2 text-right" style="padding-left: 0px;">Assigned User:</div>
+                                                <div class="col s4 l2 text-right" style="padding-left: 0px;">Assigned Users:</div>
                                                 <div class="col s8 l10">
-                                                    {{ workflow_instance.current_state.assigned_user.first_name }}
-                                                    {{ workflow_instance.current_state.assigned_user.last_name }}
-                                                    ({{ workflow_instance.current_state.assigned_user.email }})
+                                                    {% for assigned_user in workflow_instance.current_state.assigned_users.all %}
+                                                        <div class="row" style="margin: 0">
+                                                            {{ assigned_user.get_full_name }} ({{ assigned_user.email }})
+                                                        </div>
+                                                    {% endfor %}
                                                 </div>
                                         </div>
                                     {% else %}
@@ -448,7 +450,7 @@
                                 </div>
                             </div>
 
-                            {% if user == workflow_instance.current_state.assigned_user %}
+                            {% if is_assigned_user %}
                                 <div class="row">
                                     <div style="float: right;">
                                         {% include 'bom/bom-form-modal.html' with modal_title='Approve Current Stage' form=submit_state_form action=change_state_form_action name='submit-workflow-state' %}
@@ -505,19 +507,16 @@
                             </div>
                         </li>
 
-
+                        {% if workflow_instance %}
                             <li class="collection-header">
-                                <h5>Options (not implemented)</h5>
+                                <h5>Options</h5>
                             </li>
                             <li class="collection-item">
                                 <div class="row">
                                     <script>
-
                                         function optionButtonClicked(optionName, confirmMsg=null) {
-                                            if (confirmMsg) {
-                                                if (!confirm(confirmMsg)){
-                                                    return;
-                                                }
+                                            if (confirmMsg && !confirm(confirmMsg)) {
+                                                return;
                                             }
 
                                             const form = document.createElement("form");
@@ -540,29 +539,21 @@
                                         }
                                     </script>
 
-                                    {% if user.is_superuser or profile.role == 'A' %}
-                                        {% if completed_transitions|length > 0 %}
-                                            <a href="javascript:optionButtonClicked('clear_workflow_logs', 'Clear all workflow logs for {{ part }}?')" class="waves-effect waves-light btn green lighten-1">Clear All Logs</a>
-                                        {% endif %}
-                                        {% if workflow_instance %}
-
-                                                <a type="button" href="javascript:optionButtonClicked('force_finish_workflow', 'Force finish workflow for {{ part }}?')" class="waves-effect waves-light btn green lighten-1">Force Finish Workflow</a>
-
-                                                {% if current_backward_transitions and current_backward_transitions|length > 0 %}
-                                                    <a type="button" href="javascript:optionButtonClicked('force_reject_state', 'Force workflow to previous step? {{ part }}?')" class="waves-effect waves-light btn green lighten-1">Force Reject State</a>
-                                                {% endif %}
-                                                <a type="button" href="javascript:optionButtonClicked('force_approve_state', 'Force workflow to next step?')" class="waves-effect waves-light btn green lighten-1">Force Approve State</a>
-                                        {% endif %}
+                                    {% if user.is_superuser or profile.role == 'A'%}
+                                            {% if current_backward_transitions and current_backward_transitions|length > 0 %}
+                                                <a type="button" href="javascript:optionButtonClicked('force_reject_state', 'Force workflow to previous step? {{ part }}?')" class="waves-effect waves-light btn green lighten-1">Force Reject State</a>
+                                            {% endif %}
+                                            <a type="button" href="javascript:optionButtonClicked('force_approve_state', 'Force workflow to next step?')" class="waves-effect waves-light btn green lighten-1">Force Approve State</a>
 
                                     {% endif %}
-                                    {% if user.is_superuser or profile.role == 'A' or workflow_instance %}
-                                        {% if user == workflow_instance.current_state.assigned_user %}
-                                            <a href="#" class="waves-effect waves-light btn green lighten-1">Assign different user</a>
-                                        {% endif %}
+
+                                    {% if user.is_superuser or user == workflow_instance.current_state.assigned_user or profile.role == 'A' %}
+                                        <a href="#" class="waves-effect waves-light btn green lighten-1">Assign different user</a>
                                     {% endif %}
                                 </div>
 
                             </li>
+                        {% endif %}
                     </ul>
                 </div>
 

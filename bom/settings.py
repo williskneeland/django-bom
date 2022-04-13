@@ -42,6 +42,7 @@ INSTALLED_APPS = [
     'social_django',
     'djmoney',
     'djmoney.contrib.exchange',
+    'django_select2',
 ]
 
 MIDDLEWARE = [
@@ -143,6 +144,18 @@ LOGGING = {
         },
     },
 }
+
+CACHES = {
+    "select2": {
+        "BACKEND": "django_redis.cache.RedisCache",
+        "LOCATION": "redis://127.0.0.1:6379/2",
+        "OPTIONS": {
+            "CLIENT_CLASS": "django_redis.client.DefaultClient",
+        }
+    }
+}
+
+SELECT2_CACHE_BACKEND = "select2"
 
 DEFAULT_AUTO_FIELD='django.db.models.AutoField'
 

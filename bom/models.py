@@ -137,7 +137,8 @@ class UserMeta(models.Model):
 class PartClassWorkflowState(models.Model):
     name = models.CharField(max_length=255, default='', null=True, blank=True)
     is_final_state = models.BooleanField(default=False, null=False)
-    assigned_user = models.ForeignKey(settings.AUTH_USER_MODEL, null=False, on_delete=models.DO_NOTHING, default=get_user_model().objects.first().pk)
+    # assigned_users = models.ForeignKey(settings.AUTH_USER_MODEL, null=False, on_delete=models.DO_NOTHING, default=get_user_model().objects.first().pk)
+    assigned_users = models.ManyToManyField(settings.AUTH_USER_MODEL)
 
     @staticmethod
     def get_all_states_tuple():
@@ -155,11 +156,9 @@ class PartClassWorkflowState(models.Model):
         return f'{self.name}'
 
 
-
 class PartClassWorkflow(models.Model):
     name = models.CharField(max_length=255, default=None, unique=True)
     initial_state = models.ForeignKey(PartClassWorkflowState, null=True, blank=True, default=None, on_delete=models.CASCADE)
-    # delete_after_completion = true/false
 
     def copy(self, full_part_number):
         workflow_copy = PartClassWorkflow(
@@ -173,21 +172,6 @@ class PartClassWorkflow(models.Model):
 
     def __str__(self):
         return self.name
-
-
-
-class PartClassWorkflowStateTransition(models.Model):
-    workflow = models.ForeignKey(PartClassWorkflow, null=False, default=None, on_delete=models.CASCADE)
-    source_state = models.ForeignKey(PartClassWorkflowState, null=False, on_delete=models.CASCADE, related_name='source_state')
-    target_state = models.ForeignKey(PartClassWorkflowState, null=False, on_delete=models.CASCADE, related_name='target_state')
-    direction_in_workflow = models.CharField(max_length=15, default='forward')
-
-    class Meta:
-        unique_together = (('source_state', 'target_state', 'workflow'))
-
-    def __str__(self):
-        return '{} -> {} (assign to {})'.format(self.source_state, self.target_state, self.target_state.assigned_user)
-
 
 
 class PartClass(models.Model):
@@ -409,6 +393,19 @@ class Part(models.Model):
         return u'%s' % (self.full_part_number())
 
 
+class PartClassWorkflowStateTransition(models.Model):
+    workflow = models.ForeignKey(PartClassWorkflow, null=False, default=None, on_delete=models.CASCADE)
+    source_state = models.ForeignKey(PartClassWorkflowState, null=False, on_delete=models.CASCADE, related_name='source_state')
+    target_state = models.ForeignKey(PartClassWorkflowState, null=False, on_delete=models.CASCADE, related_name='target_state')
+    direction_in_workflow = models.CharField(max_length=15, default='forward')
+
+    class Meta:
+        unique_together = (('source_state', 'target_state', 'workflow'))
+
+    def __str__(self):
+        return '{} -> {}'.format(self.source_state, self.target_state)
+
+
 class PartWorkflowInstance(models.Model):
     part = models.ForeignKey(Part, null=False, on_delete=models.CASCADE, default=None)
     workflow = models.ForeignKey(PartClassWorkflow, on_delete=models.CASCADE, default=None)
@@ -423,33 +420,16 @@ class PartClassWorkflowCompletedTransition(models.Model):
     comments = models.CharField(max_length=500, null=True, blank=True, default='')
     timestamp = models.DateTimeField(auto_now_add=True, blank=True)
     part = models.ForeignKey(Part, null=False, default=None, on_delete=models.CASCADE)
-    notifying_next_user = models.BooleanField(default=True, verbose_name="Notifying next user")
-    #do_not_load = models.BooleanField(default=False, verbose_name='Do Not Load')
+    notifying_next_users = models.BooleanField(default=True, verbose_name="Notifying next users")
 
     class Meta:
         ordering = ('-timestamp', )
 
-    # @staticmethod
-    # def get_last_states(part, state):
-    #     last_states = []
-    #     for completed_transition in PartClassWorkflowCompletedTransition.objects.filter(part=part):
-    #         cur_source = completed_transition.transition.source_state
-    #         cur_target = completed_transition.transition.target_state
-    #
-    #         if cur_target == state and (cur_source, cur_source) not in last_states:
-    #             last_states.append((cur_source, cur_source))
-    #
-    #
-    #     return last_states
-
 
     def __str__(self):
-        return "({})->({}) completed by: {}".format(
-            self.transition.source_state,
-            self.transition.target_state,
-            self.transition.source_state.assigned_user
-        )
-
+        if self.transition is not None:
+            return f"{self.transition.source_state})->({self.transition.target_state}) completed by: {self.transition.source_state.assigned_user}"
+        return f"Completed workflow for {self.part}"
 
 
 # Below are attributes of a part that can be changed, but it's important to trace the change over time
