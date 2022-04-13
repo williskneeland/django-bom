@@ -614,6 +614,9 @@ def part_info(request, part_id, part_revision_id=None):
             change_state_form = PartClassWorkflowStateChangeForm(request.POST)
             return functions.change_workflow_state_and_redirect(request, part, workflow_instance, change_state_form)
 
+        if 'change-assigned-users' in request.POST:
+            return HttpResponse("changing users")
+            
         if 'force_approve_state' in request.POST: # maybe implement this
             return HttpResponse("force approve")
 
