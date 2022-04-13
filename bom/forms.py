@@ -788,6 +788,21 @@ class PartFormIntelligent(forms.ModelForm):
             value.help_text = ''
 
 
+class ChangeStateAssignedUsersForm(forms.ModelForm):
+    class Meta:
+        model = PartClassWorkflowState
+        fields = ['assigned_users']
+
+    def __init__(self, *args, **kwargs):
+        try:
+            previous_assigned_users = kwargs.pop('previous_assigned_users')
+        except KeyError:
+            previous_assigned_users = None
+
+        super(ChangeStateAssignedUsersForm, self).__init__(*args, **kwargs)
+        self.fields['notify_new_users'] = forms.BooleanField(label="Notify new assigned users?", required=False, initial=True)
+        self.fields['assigned_users'] = forms.MultipleChoiceField(label='New assigned Users', required=True, choices=[(i.id, i) for i in get_user_model().objects.all()], widget=Select2MultipleWidget)
+
 
 class CreatePartClassWorkflowTransitionForm(forms.ModelForm):
     class Meta:
@@ -831,7 +846,7 @@ class CreatePartClassWorkflowStateForm(forms.ModelForm):
         super(CreatePartClassWorkflowStateForm, self).__init__(*args, **kwargs)
         self.fields['name'] = forms.CharField(label='State Name', required=True)
         self.fields['is_final_state'] = forms.ChoiceField(label='Final State in Workflow?', choices=((False, 'No'), (True, 'Yes')), widget=forms.Select(), required=True)
-        self.fields['assigned_users'] = forms.MultipleChoiceField(label='Assigned Users', required=True, choices=[(i.id, i) for i in get_user_model().objects.all()], widget=Select2MultipleWidget) #should be required
+        self.fields['assigned_users'] = forms.MultipleChoiceField(label='Assigned Users', required=True, choices=[(i.id, i) for i in get_user_model().objects.all()], widget=Select2MultipleWidget)
 
 
 class PartClassWorkflowStateChangeForm(forms.ModelForm):
