@@ -607,17 +607,18 @@ def part_info(request, part_id, part_revision_id=None):
         if part_info_form.is_valid():
             qty = request.POST.get('quantity', 100)
 
-        if workflow_instance and ('submit-workflow-state' in request.POST or 'reject-workflow-state' in request.POST):
-            return functions.change_workflow_state_and_redirect(request, part, workflow_instance)
+        if workflow_instance:
+            if 'submit-workflow-state' in request.POST or 'reject-workflow-state' in request.POST:
+                return functions.change_workflow_state_and_redirect(request, workflow_instance)
 
-        if 'change-assigned-users' in request.POST:
-            return HttpResponse("changing users")
+            if 'change-assigned-users' in request.POST:
+                return functions.change_assigned_users_and_redirect(request, workflow_instance)
 
-        if 'force_approve_state' in request.POST: # maybe implement this
-            return HttpResponse("force approve")
+            if 'force_approve_state' in request.POST: # maybe implement this
+                return HttpResponse("force approve")
 
-        if 'force_reject_state' in request.POST:
-            return HttpResponse("force reject")
+            if 'force_reject_state' in request.POST:
+                return HttpResponse("force reject")
 
     completed_transitions = PartClassWorkflowCompletedTransition.objects.filter(part=part)
     if workflow_instance:

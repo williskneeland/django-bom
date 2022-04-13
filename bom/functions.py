@@ -16,6 +16,9 @@ from bom.forms import (
     ChangeStateAssignedUsersForm,
 )
 
+def change_assigned_users_and_redirect(request, workflow_instance):
+    return HttpResponse("not working yet")
+
 def get_part_workflow_context(request, workflow_instance):
     context = {}
     context['all_assigned_users'] = workflow_instance.current_state.assigned_users.all()
@@ -56,31 +59,31 @@ def get_part_workflow_context(request, workflow_instance):
     return context
 
 
-def change_workflow_state_and_redirect(request, part, workflow_instance):
+def change_workflow_state_and_redirect(request, workflow_instance):
     change_state_form = PartClassWorkflowStateChangeForm(request.POST)
     if not change_state_form.is_valid():
         messages.error(request, f"An error occured: {change_state_form.errors['transition']}")
 
     if change_state_form.cleaned_data['transition'] is None and not workflow_instance.current_state.is_final_state:
         messages.error(request, "Error, please select a transition")
-        return HttpResponseRedirect(reverse('bom:part-info', kwargs={'part_id': part_id})+'#workflow')
+        return HttpResponseRedirect(reverse('bom:part-info', kwargs={'part_id': workflow_instance.part.id})+'#workflow')
 
     selected_transition = change_state_form.cleaned_data['transition']
     comments = change_state_form.cleaned_data['comments']
 
     if selected_transition is None and not workflow_instance.current_state.is_final_state:
         messages.error(request, "Error, please select a transition")
-        return HttpResponseRedirect(reverse('bom:part-info', kwargs={'part_id': part_id})+'#workflow')
+        return HttpResponseRedirect(reverse('bom:part-info', kwargs={'part_id': workflow_instance.part.id})+'#workflow')
 
     if change_state_form.cleaned_data['notifying_next_users'] and not selected_transition.source_state.is_final_state:
         for assigned_user in selected_transition.source_state.assigned_users.all():
             message_context = {
                 'assigned_user': assigned_user,
-                'part': part,
+                'part': workflow_instance.part,
                 'previous_assigned_user': request.user.get_full_name(),
                 'comments': comments,
                 'transition_name': selected_transition.target_state.name,
-                'part_info_url': f'http://{request.get_host()}/bom/part/{part.id}/#workflow'
+                'part_info_url': f'http://{request.get_host()}/bom/part/{workflow_instance.part.id}/#workflow'
             }
 
 
@@ -88,7 +91,7 @@ def change_workflow_state_and_redirect(request, part, workflow_instance):
             plain_message = strip_tags(html_message)
 
             send_mail(
-                subject=f"[IndaBOM] New Task For Part {part}!",
+                subject=f"[IndaBOM] New Task For Part {workflow_instance.part}!",
                 message=plain_message,
                 from_email=settings.EMAIL_HOST_USER,
                 recipient_list=[assigned_user.email],
@@ -100,15 +103,15 @@ def change_workflow_state_and_redirect(request, part, workflow_instance):
         transition=selected_transition,
         completed_by=request.user,
         comments=comments,
-        part=part
+        part=workflow_instance.part
     )
     completed_transition.save()
 
     if workflow_instance.current_state.is_final_state and 'submit-workflow-state' in request.POST:
         workflow_instance.delete()
-        messages.success(request, f"Workflow for {part} completed!")
-        return HttpResponseRedirect(reverse('bom:part-info', kwargs={'part_id': part.id}))
+        messages.success(request, f"Workflow for {workflow_instance.part} completed!")
+        return HttpResponseRedirect(reverse('bom:part-info', kwargs={'part_id': workflow_instance.part.id}))
     else:
         workflow_instance.current_state = selected_transition.target_state
         workflow_instance.save()
-        return HttpResponseRedirect(reverse('bom:part-info', kwargs={'part_id': part.id})+'#workflow')
+        return HttpResponseRedirect(reverse('bom:part-info', kwargs={'part_id': workflow_instance.part.id})+'#workflow')

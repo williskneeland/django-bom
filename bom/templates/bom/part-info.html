@@ -547,8 +547,8 @@
 
                                     {% endif %}
 
-                                    {% if change_assigned_users_form %}
-                                        {% include 'bom/bom-form-modal.html' with modal_title='Change assigned users' form=change_assigned_users_form action=change_state_form_action name='change-assigned-users' %}
+                                    {% if workflow_context.change_assigned_users_form %}
+                                        {% include 'bom/bom-form-modal.html' with modal_title='Change assigned users' form=workflow_context.change_assigned_users_form action=workflow_context.change_state_form_action name='change-assigned-users' %}
                                     {% endif %}
 
                                 </div>
