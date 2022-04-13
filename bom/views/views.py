@@ -86,13 +86,13 @@ from bom.models import (
     PartClassWorkflowCompletedTransition
 )
 from bom.utils import check_references_for_duplicates, listify_string, prep_for_sorting_nicely, stringify_list
-import bom.state_diagram_builder as diagrams
+# import bom.state_diagram_builder as diagrams
 import json
 
 # from django.core.mail import send_mail
 from django.conf import settings
 # from django.template.loader import render_to_string
-from django.utils.html import strip_tags
+# from django.utils.html import strip_tags
 from bom import functions
 
 
@@ -621,35 +621,7 @@ def part_info(request, part_id, part_revision_id=None):
 
     completed_transitions = PartClassWorkflowCompletedTransition.objects.filter(part=part)
     if workflow_instance:
-        all_assigned_users = workflow_instance.current_state.assigned_users.all()
-        is_assigned_user = request.user in all_assigned_users
-        
-        all_forward_transitions = PartClassWorkflowStateTransition.objects.filter(
-            workflow=workflow_instance.workflow,
-            direction_in_workflow='forward'
-        )
-
-        workflow_str_lines = diagrams.workflow_str(
-            initial_state=workflow_instance.workflow.initial_state,
-            forward_transitions=all_forward_transitions
-        )
-
-        current_forward_transitions = all_forward_transitions.filter(source_state=workflow_instance.current_state)
-        current_backward_transitions = PartClassWorkflowStateTransition.objects.filter(
-            workflow=workflow_instance.workflow,
-            source_state=workflow_instance.current_state,
-            direction_in_workflow='backward'
-        )
-
-        if workflow_instance.current_state.is_final_state:
-            submit_state_form = PartClassWorkflowStateChangeForm(final_transition=True)
-        else:
-            submit_state_form = PartClassWorkflowStateChangeForm(forward_transitions=current_forward_transitions)
-
-        reject_state_form = PartClassWorkflowStateChangeForm(backward_transitions=current_backward_transitions)
-        if user.is_superuser or profile.role == 'A' or is_assigned_user:
-            change_assigned_users_form = ChangeStateAssignedUsersForm(previous_assigned_users=all_assigned_users)
-            change_state_form_action = reverse('bom:part-info', kwargs={'part_id': part_id})
+        workflow_context = functions.get_part_workflow_context(request, workflow_instance)
 
     try:
         qty = int(qty)
