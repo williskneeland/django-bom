@@ -410,6 +410,7 @@ class PartWorkflowInstance(models.Model):
     part = models.ForeignKey(Part, null=False, on_delete=models.CASCADE, default=None)
     workflow = models.ForeignKey(PartClassWorkflow, on_delete=models.CASCADE, default=None)
     current_state = models.ForeignKey(PartClassWorkflowState, on_delete=models.CASCADE, default=None)
+    currently_assigned_users = models.ManyToManyField(settings.AUTH_USER_MODEL, null=True, blank=True)
 
     def __str__(self):
         return self.workflow.name
@@ -427,8 +428,8 @@ class PartClassWorkflowCompletedTransition(models.Model):
 
 
     def __str__(self):
-        if self.transition is not None:
-            return f"{self.transition.source_state})->({self.transition.target_state}) completed by: {self.transition.source_state.assigned_user}"
+        # if self.transition is not None:
+        #     return f"{self.transition.source_state})->({self.transition.target_state}) completed by: {self.transition.source_state.assigned_user}"
         return f"Completed workflow for {self.part}"
 
 

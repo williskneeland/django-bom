@@ -16,12 +16,14 @@ from bom.forms import (
     ChangeStateAssignedUsersForm,
 )
 
-def change_assigned_users_and_redirect(request, workflow_instance):
-    return HttpResponse("not working yet")
+
 
 def get_part_workflow_context(request, workflow_instance):
     context = {}
-    context['all_assigned_users'] = workflow_instance.current_state.assigned_users.all()
+    context['all_assigned_users'] = workflow_instance.currently_assigned_users.all()
+    if len(context['all_assigned_users']) == 0:
+        context['all_assigned_users'] = workflow_instance.current_state.assigned_users.all()
+
     context['is_assigned_user'] = request.user in context['all_assigned_users']
 
     all_forward_transitions = PartClassWorkflowStateTransition.objects.filter(
@@ -59,6 +61,13 @@ def get_part_workflow_context(request, workflow_instance):
     return context
 
 
+def change_assigned_users_and_redirect(request, workflow_instance):
+    change_assigned_users_form = ChangeStateAssignedUsersForm(request.POST)
+    if change_assigned_users_form.is_valid():
+        return HttpResponse(change_assigned_users_form.cleaned_data)
+    return HttpResponse("not working yet")
+
+
 def change_workflow_state_and_redirect(request, workflow_instance):
     change_state_form = PartClassWorkflowStateChangeForm(request.POST)
     if not change_state_form.is_valid():
@@ -86,7 +95,6 @@ def change_workflow_state_and_redirect(request, workflow_instance):
                 'part_info_url': f'http://{request.get_host()}/bom/part/{workflow_instance.part.id}/#workflow'
             }
 
-
             html_message = render_to_string('bom/workflow_email_template.html', message_context)
             plain_message = strip_tags(html_message)
 
@@ -105,6 +113,7 @@ def change_workflow_state_and_redirect(request, workflow_instance):
         comments=comments,
         part=workflow_instance.part
     )
+
     completed_transition.save()
 
     if workflow_instance.current_state.is_final_state and 'submit-workflow-state' in request.POST:
@@ -113,5 +122,6 @@ def change_workflow_state_and_redirect(request, workflow_instance):
         return HttpResponseRedirect(reverse('bom:part-info', kwargs={'part_id': workflow_instance.part.id}))
     else:
         workflow_instance.current_state = selected_transition.target_state
+        workflow_instance.currently_assigned_users = selected_transition.target_state.assigned_users
         workflow_instance.save()
         return HttpResponseRedirect(reverse('bom:part-info', kwargs={'part_id': workflow_instance.part.id})+'#workflow')

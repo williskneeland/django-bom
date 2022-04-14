@@ -50,8 +50,8 @@ from bom.forms import (
     PartClassWorkflowStateForm,
     CreatePartClassWorkflowStateForm,
     CreatePartClassWorkflowTransitionForm,
-    PartClassWorkflowStateChangeForm,
-    ChangeStateAssignedUsersForm,
+    # PartClassWorkflowStateChangeForm,
+    # ChangeStateAssignedUsersForm,
     PartCSVForm,
     PartFormIntelligent,
     PartFormSemiIntelligent,
@@ -86,13 +86,8 @@ from bom.models import (
     PartClassWorkflowCompletedTransition
 )
 from bom.utils import check_references_for_duplicates, listify_string, prep_for_sorting_nicely, stringify_list
-# import bom.state_diagram_builder as diagrams
 import json
-
-# from django.core.mail import send_mail
 from django.conf import settings
-# from django.template.loader import render_to_string
-# from django.utils.html import strip_tags
 from bom import functions
 
 
