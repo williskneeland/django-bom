@@ -800,8 +800,8 @@ class ChangeStateAssignedUsersForm(forms.ModelForm):
             previous_assigned_users = None
 
         super(ChangeStateAssignedUsersForm, self).__init__(*args, **kwargs)
+        self.fields['comments'] = forms.CharField(label='Comments to new assigned users', required=False)
         self.fields['notify_new_users'] = forms.BooleanField(label="Notify new assigned users?", required=False, initial=True)
-        # self.fields['change_for_all'] = forms.BooleanField(label='Change assigned users ')
         self.fields['assigned_users'] = forms.MultipleChoiceField(label='New assigned Users', required=True, choices=[(i.id, i) for i in get_user_model().objects.all()], widget=Select2MultipleWidget)
 
 

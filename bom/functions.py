@@ -17,7 +17,6 @@ from bom.forms import (
 )
 
 
-
 def get_part_workflow_context(request, workflow_instance):
     context = {}
     context['all_assigned_users'] = workflow_instance.currently_assigned_users.all()
@@ -61,14 +60,45 @@ def get_part_workflow_context(request, workflow_instance):
     return context
 
 
-def change_assigned_users_and_redirect(request, workflow_instance):
+def send_new_task_email(message_context, fail_silently=True):
+    html_message = render_to_string('bom/workflow_email_template.html', message_context)
+    plain_message = strip_tags(html_message)
+
+    send_mail(
+        subject=f"[IndaBOM] New Task For Part {message_context['part']}!",
+        message=plain_message,
+        from_email=settings.EMAIL_HOST_USER,
+        recipient_list=[message_context['assigned_user'].email],
+        html_message=html_message,
+        fail_silently=True,
+    )
+
+
+def change_assigned_users_and_refresh(request, workflow_instance):
     change_assigned_users_form = ChangeStateAssignedUsersForm(request.POST)
-    if change_assigned_users_form.is_valid():
-        return HttpResponse(change_assigned_users_form.cleaned_data)
-    return HttpResponse("not working yet")
+    if not change_assigned_users_form.is_valid():
+        return HttpResponse("Error: " + change_assigned_users_form.errors['assigned_users'])
+
+    new_assigned_users = change_assigned_users_form.cleaned_data['assigned_users']
+    workflow_instance.currently_assigned_users.set(new_assigned_users)
+
+    if change_assigned_users_form.cleaned_data['notify_new_users']:
+        for assigned_user in workflow_instance.currently_assigned_users.all():
+            send_new_task_email(
+                message_context = {
+                    'assigned_user': assigned_user,
+                    'part': workflow_instance.part,
+                    'previous_assigned_user': request.user.get_full_name(),
+                    'comments': change_assigned_users_form.cleaned_data['comments'],
+                    'transition_name': workflow_instance.current_state.name,
+                    'part_info_url': f'http://{request.get_host()}/bom/part/{workflow_instance.part.id}/#workflow'
+                }
+            )
+
+    return HttpResponseRedirect(reverse('bom:part-info', kwargs={'part_id': workflow_instance.part.id})+'#workflow')
 
 
-def change_workflow_state_and_redirect(request, workflow_instance):
+def change_workflow_state_and_refresh(request, workflow_instance):
     change_state_form = PartClassWorkflowStateChangeForm(request.POST)
     if not change_state_form.is_valid():
         messages.error(request, f"An error occured: {change_state_form.errors['transition']}")
@@ -86,25 +116,15 @@ def change_workflow_state_and_redirect(request, workflow_instance):
 
     if change_state_form.cleaned_data['notifying_next_users'] and not selected_transition.source_state.is_final_state:
         for assigned_user in selected_transition.source_state.assigned_users.all():
-            message_context = {
-                'assigned_user': assigned_user,
-                'part': workflow_instance.part,
-                'previous_assigned_user': request.user.get_full_name(),
-                'comments': comments,
-                'transition_name': selected_transition.target_state.name,
-                'part_info_url': f'http://{request.get_host()}/bom/part/{workflow_instance.part.id}/#workflow'
-            }
-
-            html_message = render_to_string('bom/workflow_email_template.html', message_context)
-            plain_message = strip_tags(html_message)
-
-            send_mail(
-                subject=f"[IndaBOM] New Task For Part {workflow_instance.part}!",
-                message=plain_message,
-                from_email=settings.EMAIL_HOST_USER,
-                recipient_list=[assigned_user.email],
-                html_message=html_message,
-                fail_silently=True,
+            send_new_task_email(
+                message_context = {
+                    'assigned_user': assigned_user,
+                    'part': workflow_instance.part,
+                    'previous_assigned_user': request.user.get_full_name(),
+                    'comments': comments,
+                    'transition_name': selected_transition.target_state.name,
+                    'part_info_url': f'http://{request.get_host()}/bom/part/{workflow_instance.part.id}/#workflow'
+                }
             )
 
     completed_transition = PartClassWorkflowCompletedTransition(
@@ -120,8 +140,8 @@ def change_workflow_state_and_redirect(request, workflow_instance):
         workflow_instance.delete()
         messages.success(request, f"Workflow for {workflow_instance.part} completed!")
         return HttpResponseRedirect(reverse('bom:part-info', kwargs={'part_id': workflow_instance.part.id}))
-    else:
-        workflow_instance.current_state = selected_transition.target_state
-        workflow_instance.currently_assigned_users = selected_transition.target_state.assigned_users
-        workflow_instance.save()
-        return HttpResponseRedirect(reverse('bom:part-info', kwargs={'part_id': workflow_instance.part.id})+'#workflow')
+    
+    workflow_instance.current_state = selected_transition.target_state
+    workflow_instance.currently_assigned_users.set(selected_transition.target_state.assigned_users.all())
+    workflow_instance.save()
+    return HttpResponseRedirect(reverse('bom:part-info', kwargs={'part_id': workflow_instance.part.id})+'#workflow')

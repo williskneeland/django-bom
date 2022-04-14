@@ -604,10 +604,10 @@ def part_info(request, part_id, part_revision_id=None):
 
         if workflow_instance:
             if 'submit-workflow-state' in request.POST or 'reject-workflow-state' in request.POST:
-                return functions.change_workflow_state_and_redirect(request, workflow_instance)
+                return functions.change_workflow_state_and_refresh(request, workflow_instance)
 
             if 'change-assigned-users' in request.POST:
-                return functions.change_assigned_users_and_redirect(request, workflow_instance)
+                return functions.change_assigned_users_and_refresh(request, workflow_instance)
 
             if 'force_approve_state' in request.POST: # maybe implement this
                 return HttpResponse("force approve")
