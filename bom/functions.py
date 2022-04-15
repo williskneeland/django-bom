@@ -6,6 +6,7 @@ from django.utils.html import strip_tags
 from django.core.mail import send_mail
 from django.conf import settings
 import bom.state_diagram_builder as diagrams
+from bom import constants
 from bom.models import (
     PartClassWorkflowCompletedTransition,
     PartClassWorkflowStateTransition,
@@ -14,7 +15,53 @@ from bom.models import (
 from bom.forms import (
     PartClassWorkflowStateChangeForm,
     ChangeStateAssignedUsersForm,
+    CreatePartClassWorkflowTransitionForm,
+
 )
+
+def validate_new_workflow(request, workflow_form):
+    valid_results = { 'is_valid': True }
+
+    if not workflow_form.is_valid():
+        valid_results['is_valid'] = False
+        valid_results['error_msg'] = "Invalid entries for workflow"
+        # messages.warning(request, "Invalid entries for workflow")
+        return valid_results
+
+    has_final_state = False
+    has_initial_state = False
+    valid_transitions = []
+
+    for i in range(constants.NUMBER_WORKFLOW_TRANSITIONS_MAX):
+        transition_form = CreatePartClassWorkflowTransitionForm(request.POST, prefix="trans{}".format(i))
+        if transition_form.is_valid():
+            valid_transitions.append(transition_form.cleaned_data)
+            if transition_form.cleaned_data['target_state'].is_final_state:
+                has_final_state = True
+            if transition_form.cleaned_data['source_state'] == workflow_form.cleaned_data['initial_state']:
+                has_initial_state = True
+
+    if not has_final_state:
+        valid_results['is_valid'] = False
+        valid_results['error_msg'] = "Must be able to transition to a final state."
+        # messages.error(request, "Must be able to transition to a final state.")
+        # return False
+
+    if not has_initial_state:
+        valid_results['is_valid'] = False
+        valid_results['error_msg'] = "Transitions must contain the workflow's initial state."
+        # messages.error(request, "Transitions must contain the workflow's initial state.")
+        # return False
+
+    if len(valid_transitions) == 0:
+        valid_results['is_valid'] = False
+        valid_results['error_msg'] = "You cannot create a workflow without defining any state transitions."
+        # messages.error(request, "You cannot create a workflow without defining any state transitions.")
+        # return False
+
+    valid_results['valid_transitions'] = valid_transitions
+
+    return valid_results
 
 
 def get_part_workflow_context(request, workflow_instance):
@@ -140,7 +187,7 @@ def change_workflow_state_and_refresh(request, workflow_instance):
         workflow_instance.delete()
         messages.success(request, f"Workflow for {workflow_instance.part} completed!")
         return HttpResponseRedirect(reverse('bom:part-info', kwargs={'part_id': workflow_instance.part.id}))
-    
+
     workflow_instance.current_state = selected_transition.target_state
     workflow_instance.currently_assigned_users.set(selected_transition.target_state.assigned_users.all())
     workflow_instance.save()

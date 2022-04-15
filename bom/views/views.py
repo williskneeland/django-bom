@@ -21,7 +21,8 @@ from django.views.generic.base import TemplateView
 
 from social_django.models import UserSocialAuth
 
-import bom.constants as constants
+# import bom.constants as constants
+from bom import constants
 from bom.csv_headers import (
     BOMFlatCSVHeaders,
     BOMIndentedCSVHeaders,
@@ -571,8 +572,6 @@ def part_info(request, part_id, part_revision_id=None):
     organization = profile.organization
 
     part = get_object_or_404(Part, pk=part_id)
-
-
     workflow_instance = PartWorkflowInstance.objects.filter(part=part).first()
 
     part_revision = None
@@ -942,46 +941,58 @@ def create_part_class_workflow(request):
                 return TemplateResponse(request, 'bom/create-part-class-workflow.html', locals())
 
         else: # workflow form submitted
+            workflow_form = PartClassWorkflowForm(request.POST)
+            valid_workflow_results = functions.validate_new_workflow(request, workflow_form)
 
-            has_final_state = False
-            valid_transitions = []
-            # As of now the onus is on the admins to ensure the states map correctly
-            for i in range(max_transitions):
-                transition_form = CreatePartClassWorkflowTransitionForm(request.POST, prefix="trans{}".format(i))
-                if transition_form.is_valid():
-                    valid_transitions.append(transition_form.cleaned_data)
-                    if transition_form.cleaned_data['target_state'].is_final_state:
-                        has_final_state = True
-
-            if not has_final_state:
-                messages.error(request, "Must be able to transition to a final state.")
+            if not valid_workflow_results['is_valid']:
+                messages.error(request, valid_workflow_results['error_msg'])
                 return TemplateResponse(request, 'bom/create-part-class-workflow.html', locals())
 
-
-            workflow_form = PartClassWorkflowForm(request.POST)
-            if not workflow_form.is_valid():
-                messages.warning(request, "Invalid entries for workflow")
-
-            workflow_name = workflow_form.cleaned_data['name']
-
+            workflow_form.save()
+            # if not workflow_form.is_valid():
+            #     messages.warning(request, "Invalid entries for workflow")
+            #
+            # has_final_state = False
+            # has_initial_state = False
             # valid_transitions = []
-            # # As of now the onus is on the admins to ensure the states map correctly
+            #
             # for i in range(max_transitions):
             #     transition_form = CreatePartClassWorkflowTransitionForm(request.POST, prefix="trans{}".format(i))
             #     if transition_form.is_valid():
             #         valid_transitions.append(transition_form.cleaned_data)
+            #         if transition_form.cleaned_data['target_state'].is_final_state:
+            #             has_final_state = True
+            #         if transition_form.cleaned_data['source_state'] == workflow_form.cleaned_data['initial_state']:
+            #             has_initial_state = True
+            #
+            # if not has_final_state:
+            #     messages.error(request, "Must be able to transition to a final state.")
+            #     return TemplateResponse(request, 'bom/create-part-class-workflow.html', locals())
+            #
+            # if not has_initial_state:
+            #     messages.error(request, "Transitions must contain the workflow's initial state.")
+            #     return TemplateResponse(request, 'bom/create-part-class-workflow.html', locals())
 
-            if len(valid_transitions) == 0:
-                messages.error(request, "You cannot create a workflow without defining any state transitions.")
-                return TemplateResponse(request, 'bom/create-part-class-workflow.html', locals())
-            else:
-                workflow_form.save()
 
-            for transition in valid_transitions:
+
+
+            # workflow_form = PartClassWorkflowForm(request.POST)
+            # if not workflow_form.is_valid():
+            #     messages.warning(request, "Invalid entries for workflow")
+
+            workflow_name = workflow_form.cleaned_data['name']
+
+            # if len(valid_transitions) == 0:
+            #     messages.error(request, "You cannot create a workflow without defining any state transitions.")
+            #     return TemplateResponse(request, 'bom/create-part-class-workflow.html', locals())
+            # else:
+            #   workflow_form.save()
+
+            for transition in valid_workflow_results['valid_transitions']:
                 try:
                     source_state = transition['source_state']
                     target_state = transition['target_state']
-                    workflow = workflow=PartClassWorkflow.objects.filter(name=workflow_name).first()
+                    workflow = PartClassWorkflow.objects.filter(name=workflow_name).first()
 
                     new_transition = PartClassWorkflowStateTransition(
                         workflow=workflow,
@@ -991,7 +1002,6 @@ def create_part_class_workflow(request):
                     )
                     new_transition.save()
 
-                    # Creating the
                     opposite_transition = PartClassWorkflowStateTransition(
                         workflow=workflow,
                         source_state=target_state,

@@ -75,6 +75,7 @@
                                     document.getElementById("addNewTransitionBtn").style.display = "block";
                                     for (let i = parseInt("{{max_transitions}}", 10)-1; i >= 0; i--) {
                                         let transitionDiv = document.getElementById("transition" + i.toString());
+                                        console.log(transitionDiv);
                                         if (transitionDiv.style.display === "block") {
                                             transitionDiv.style.display = "none"; //find some way to nullify the values
                                             if (i == 1) {
@@ -101,5 +102,3 @@
 {% block scripts %}
 
 {% endblock %}
-
-
