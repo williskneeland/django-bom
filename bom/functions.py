@@ -10,14 +10,52 @@ from bom import constants
 from bom.models import (
     PartClassWorkflowCompletedTransition,
     PartClassWorkflowStateTransition,
+    PartClassWorkflow
 
 )
 from bom.forms import (
     PartClassWorkflowStateChangeForm,
     ChangeStateAssignedUsersForm,
     CreatePartClassWorkflowTransitionForm,
-
 )
+
+def validate_new_workflow_state(workflow_state_form):
+    valid_results = {'is_valid': True}
+
+    if not workflow_state_form.is_valid():
+        valid_results['is_valid'] = False
+        error_msg = 'Error creating new state. Missing required fields:  '
+        for error in workflow_state_form.errors:
+            error_msg += f'{error}, '
+        valid_results['error_msg'] = error_msg
+
+    return valid_results
+
+
+def create_transitions(transitions, workflow_name):
+    for transition in transitions:
+        try:
+            source_state = transition['source_state']
+            target_state = transition['target_state']
+            workflow = PartClassWorkflow.objects.filter(name=workflow_name).first()
+
+            new_transition = PartClassWorkflowStateTransition(
+                workflow=workflow,
+                source_state=source_state,
+                target_state=target_state,
+                direction_in_workflow='forward'
+            )
+            new_transition.save()
+
+            opposite_transition = PartClassWorkflowStateTransition(
+                workflow=workflow,
+                source_state=target_state,
+                target_state=source_state,
+                direction_in_workflow='backward'
+            )
+            opposite_transition.save()
+        except:
+            pass
 
 def validate_new_workflow(request, workflow_form):
     valid_results = { 'is_valid': True }
@@ -25,7 +63,6 @@ def validate_new_workflow(request, workflow_form):
     if not workflow_form.is_valid():
         valid_results['is_valid'] = False
         valid_results['error_msg'] = "Invalid entries for workflow"
-        # messages.warning(request, "Invalid entries for workflow")
         return valid_results
 
     has_final_state = False
@@ -44,20 +81,14 @@ def validate_new_workflow(request, workflow_form):
     if not has_final_state:
         valid_results['is_valid'] = False
         valid_results['error_msg'] = "Must be able to transition to a final state."
-        # messages.error(request, "Must be able to transition to a final state.")
-        # return False
 
     if not has_initial_state:
         valid_results['is_valid'] = False
         valid_results['error_msg'] = "Transitions must contain the workflow's initial state."
-        # messages.error(request, "Transitions must contain the workflow's initial state.")
-        # return False
 
     if len(valid_transitions) == 0:
         valid_results['is_valid'] = False
         valid_results['error_msg'] = "You cannot create a workflow without defining any state transitions."
-        # messages.error(request, "You cannot create a workflow without defining any state transitions.")
-        # return False
 
     valid_results['valid_transitions'] = valid_transitions
 

@@ -15,7 +15,7 @@
 
 {% block content %}
     <div class="container-app">
-        {% if profile.role == 'A' %}
+        {% if profile.role == 'A' or user.is_superuser %}
         <!--        create workflow here...-->
             <div class="row">
 
@@ -64,6 +64,12 @@
                                             if (i == num_trans-1) {
                                                 document.getElementById("addNewTransitionBtn").style.display = "none";
                                             }
+
+                                            let selects = transitionDiv.getElementsByTagName("select");
+                                            for (let i = 0; i < selects.length; i++) {
+                                                selects[i].disabled = true;
+                                            }
+                                            
                                             transitionDiv.style.display = "block";
                                             document.getElementById("removeTransitionBtn").style.display = "block";
                                             break;
@@ -75,12 +81,19 @@
                                     document.getElementById("addNewTransitionBtn").style.display = "block";
                                     for (let i = parseInt("{{max_transitions}}", 10)-1; i >= 0; i--) {
                                         let transitionDiv = document.getElementById("transition" + i.toString());
-                                        console.log(transitionDiv);
+
                                         if (transitionDiv.style.display === "block") {
-                                            transitionDiv.style.display = "none"; //find some way to nullify the values
+                                            console.log(transitionDiv);
+                                            transitionDiv.style.display = "none";
+
+                                            let selects = transitionDiv.getElementsByTagName("select");
+                                            for (let i = 0; i < selects.length; i++) {
+                                                selects[i].disabled = true;
+                                            }
                                             if (i == 1) {
                                                 document.getElementById("removeTransitionBtn").style.display = "none";
                                             }
+                                            console.log(transitionDiv);
                                             break;
                                         }
                                     }
