@@ -540,7 +540,7 @@
                                     </script>
 
                                     {% if user.is_superuser or profile.role == 'A'%}
-                                            {% if current_backward_transitions and current_backward_transitions|length > 0 %}
+                                            {% if workflow_context.current_backward_transitions and workflow_context.current_backward_transitions|length > 0 %}
                                                 <a type="button" href="javascript:optionButtonClicked('force_reject_state', 'Force workflow to previous step? {{ part }}?')" class="waves-effect waves-light btn green lighten-1">Force Reject State</a>
                                             {% endif %}
                                             <a type="button" href="javascript:optionButtonClicked('force_approve_state', 'Force workflow to next step?')" class="waves-effect waves-light btn green lighten-1">Force Approve State</a>

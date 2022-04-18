@@ -55,10 +55,11 @@
                                 // a div, ensure its values are set to null before it is hidden.
                                 document.getElementById("addNewTransitionBtn").addEventListener("click", addTransitionDiv, false);
                                 document.getElementById("removeTransitionBtn").addEventListener("click", removeTransitionDiv, false);
+
                                 function addTransitionDiv() {
                                     let num_trans = parseInt("{{max_transitions}}", 10);
 
-                                    for (let i = 1; i < num_trans; i++) { // remember to change to 5
+                                    for (let i = 1; i < num_trans; i++) {
                                         let transitionDiv = document.getElementById("transition" + i.toString());
                                         if (transitionDiv.style.display === "none") {
                                             if (i == num_trans-1) {
@@ -67,9 +68,9 @@
 
                                             let selects = transitionDiv.getElementsByTagName("select");
                                             for (let i = 0; i < selects.length; i++) {
-                                                selects[i].disabled = true;
+                                                selects[i].removeAttribute("disabled");
                                             }
-                                            
+
                                             transitionDiv.style.display = "block";
                                             document.getElementById("removeTransitionBtn").style.display = "block";
                                             break;
@@ -83,17 +84,17 @@
                                         let transitionDiv = document.getElementById("transition" + i.toString());
 
                                         if (transitionDiv.style.display === "block") {
-                                            console.log(transitionDiv);
                                             transitionDiv.style.display = "none";
 
                                             let selects = transitionDiv.getElementsByTagName("select");
                                             for (let i = 0; i < selects.length; i++) {
                                                 selects[i].disabled = true;
+                                                console.log("selects[i] from button", selects[i]);
                                             }
+
                                             if (i == 1) {
                                                 document.getElementById("removeTransitionBtn").style.display = "none";
                                             }
-                                            console.log(transitionDiv);
                                             break;
                                         }
                                     }
