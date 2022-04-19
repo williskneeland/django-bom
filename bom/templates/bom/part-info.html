@@ -453,12 +453,12 @@
                             {% if workflow_context.is_assigned_user %}
                                 <div class="row">
                                     <div style="float: right;">
-                                        {% include 'bom/bom-form-modal.html' with modal_title='Approve Current Stage' form=workflow_context.submit_state_form action=workflow_context.change_state_form_action name='submit-workflow-state' %}
+                                        {% include 'bom/bom-form-modal.html' with modal_title='Approve Current State' form=workflow_context.submit_state_form action=workflow_context.change_state_form_action name='submit-workflow-state' %}
                                     </div>
 
                                     {% if workflow_context.current_backward_transitions and workflow_context.current_backward_transitions|length > 0 %}
                                         <div style="float: left">
-                                            {% include 'bom/bom-form-modal.html' with modal_title='Reject Current Stage' form=workflow_context.reject_state_form action=workflow_context.change_state_form_action name='reject-workflow-state' %}
+                                            {% include 'bom/bom-form-modal.html' with modal_title='Reject Current State' form=workflow_context.reject_state_form action=workflow_context.change_state_form_action name='reject-workflow-state' %}
                                         </div>
                                     {% endif %}
                                 </div>
@@ -541,9 +541,10 @@
 
                                     {% if user.is_superuser or profile.role == 'A'%}
                                             {% if workflow_context.current_backward_transitions and workflow_context.current_backward_transitions|length > 0 %}
-                                                <a type="button" href="javascript:optionButtonClicked('force_reject_state', 'Force workflow to previous step? {{ part }}?')" class="waves-effect waves-light btn green lighten-1">Force Reject State</a>
+                                                {% include 'bom/bom-form-modal.html' with modal_title='Force reject state' form=workflow_context.reject_state_form action=workflow_context.change_state_form_action name='reject-workflow-state' %}
                                             {% endif %}
-                                            <a type="button" href="javascript:optionButtonClicked('force_approve_state', 'Force workflow to next step?')" class="waves-effect waves-light btn green lighten-1">Force Approve State</a>
+
+                                            {% include 'bom/bom-form-modal.html' with modal_title='Force approve state' form=workflow_context.submit_state_form action=workflow_context.change_state_form_action name='submit-workflow-state' %}
 
                                     {% endif %}
 
