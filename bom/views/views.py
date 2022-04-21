@@ -914,11 +914,6 @@ def create_part_class_workflow(request):
     profile = user.bom_profile()
     title = 'Create New Part Class Workflow'
     max_transitions = constants.NUMBER_WORKFLOW_TRANSITIONS_MAX
-<<<<<<< HEAD
-=======
-    max_transitions = 3
-
->>>>>>> 2803fc5ad01e9600f2e7f2fa2421669c45731b94
     transition_forms = []
 
     for i in range(max_transitions):
@@ -942,26 +937,6 @@ def create_part_class_workflow(request):
                 return TemplateResponse(request, 'bom/create-part-class-workflow.html', locals())
 
         else: # workflow form submitted
-<<<<<<< HEAD
-            # return HttpResponse(list(request.POST.items()))
-=======
-            return HttpResponse(request.POST.items())
-            has_final_state = False
-            valid_transitions = []
-            # As of now the onus is on the admins to ensure the states map correctly
-            for i in range(max_transitions):
-                transition_form = CreatePartClassWorkflowTransitionForm(request.POST, prefix="trans{}".format(i))
-                if transition_form.is_valid():
-                    valid_transitions.append(transition_form.cleaned_data)
-                    if transition_form.cleaned_data['target_state'].is_final_state:
-                        has_final_state = True
-
-            if not has_final_state:
-                messages.error(request, "Must be able to transition to a final state.")
-                return TemplateResponse(request, 'bom/create-part-class-workflow.html', locals())
-
-
->>>>>>> 2803fc5ad01e9600f2e7f2fa2421669c45731b94
             workflow_form = PartClassWorkflowForm(request.POST)
             valid_workflow_results = functions.validate_new_workflow(request, workflow_form)
 
