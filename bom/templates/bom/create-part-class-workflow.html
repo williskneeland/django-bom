@@ -13,7 +13,27 @@
 <li><a href="{% url 'bom:home' %}">Cancel</a></li>
 {% endblock %}
 
+
 {% block content %}
+    <script>
+        function deleteTransition(evt) {
+            let transitionDiv = document.getElementById(evt.currentTarget.transitionId);
+            let num_trans = parseInt("{{max_transitions}}", 10);
+            let parent = transitionDiv.parentNode;
+            let inputChildren = transitionDiv.getElementsByTagName("select");
+
+            document.getElementById("addNewTransitionBtn").removeAttribute("style");
+            // transitionDiv.style.display = "none";
+            parent.appendChild(transitionDiv); //moving to end
+
+            for (let i = 0; i < inputChildren.length; i++) {
+                inputChildren[i].value = inputChildren[i].options[0].value;
+                console.log(inputChildren[i].value);
+            }
+            console.log(parent, "parent");
+            console.log(transitionDiv, "transition div");
+        }
+    </script>
     <div class="container-app">
         {% if profile.role == 'A' or user.is_superuser %}
         <!--        create workflow here...-->
@@ -30,15 +50,25 @@
                     <h2>State Transitions</h2>
                     <p>Note that the maximum allowed number of state transitions for each workflow is {{ max_transitions }}</p>
 
-                    {% for trans_form in transition_forms %}
-                        {% with index=forloop.counter0 counter=forloop.counter %}
-                            <div class="row" id="transition{{index}}" style="border: 2px solid #67ba6a; border-radius: 25px; display: {% if index == 0 %} block; {% else %} none; {% endif %}">
-                                <h5 style="text-align: center;">Transition {{counter}}</h5>
-                                {{ trans_form.index.non_field_errors }}
-                                {{ trans_form|materializecss:'m4 s12' }}
-                            </div>
-                        {% endwith %}
-                    {% endfor %}
+                    <div id="transitions">
+                        {% for trans_form in transition_forms %}
+                            {% with index=forloop.counter0 counter=forloop.counter %}
+                                <div class="row" id="transition{{index}}" style="border: 2px solid #67ba6a; border-radius: 25px; padding: 20px 0 0 20px; display: {% if index == 0 %} block; {% else %} none; {% endif %}">
+                                    <!-- <h5 style="text-align: center;">Transition {{counter}}</h5> -->
+                                    {{ trans_form.index.non_field_errors }}
+                                    {{ trans_form|materializecss:'m4 s12' }}
+                                    {% if index != 0 %}
+                                        <button class="waves-effect waves-light btn green lighten-1" type="button" id="removeTransitionBtn{{index}}">Delete</button>
+                                        <script>
+                                            var deleteBtn = document.getElementById("removeTransitionBtn{{index}}");
+                                            deleteBtn.transitionId = "transition{{index}}";
+                                            deleteBtn.addEventListener("click", deleteTransition);
+                                        </script>
+                                    {% endif %}
+                                </div>
+                            {% endwith %}
+                        {% endfor %}
+                    </div>
 
                     <!--      Submit / Cancel        -->
                     <div class="row">
@@ -51,8 +81,6 @@
                             <button class="waves-effect waves-light btn green lighten-1" type="submit" name="action">Save</button>
 
                             <script>
-                                // APPROACH: Once submitted, check for and only process divs that are not null. If removing
-                                // a div, ensure its values are set to null before it is hidden.
                                 document.getElementById("addNewTransitionBtn").addEventListener("click", addTransitionDiv, false);
                                 document.getElementById("removeTransitionBtn").addEventListener("click", removeTransitionDiv, false);
 
@@ -62,6 +90,10 @@
                                     for (let i = 1; i < num_trans; i++) {
                                         let transitionDiv = document.getElementById("transition" + i.toString());
                                         if (transitionDiv.style.display === "none") {
+                                            let inputChildren = transitionDiv.getElementsByTagName("select");
+                                            for (let i = 0; i < inputChildren.length; i++) {
+                                                inputChildren[i].value = inputChildren[i].options[0].value;
+                                            }
                                             if (i == num_trans-1) {
                                                 document.getElementById("addNewTransitionBtn").style.display = "none";
                                             }
@@ -72,7 +104,6 @@
                                             }
 
                                             transitionDiv.style.display = "block";
-                                            document.getElementById("removeTransitionBtn").style.display = "block";
                                             break;
                                         }
                                     }
