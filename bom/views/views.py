@@ -616,7 +616,7 @@ def part_info(request, part_id, part_revision_id=None):
 
         if 'change-assigned-users' in request.POST:
             return HttpResponse("changing users")
-            
+
         if 'force_approve_state' in request.POST: # maybe implement this
             return HttpResponse("force approve")
 
@@ -952,6 +952,7 @@ def create_part_class_workflow(request):
 
     title = 'Create New Part Class Workflow'
     max_transitions = constants.NUMBER_WORKFLOW_TRANSITIONS_MAX
+    max_transitions = 3
 
     transition_forms = []
     for i in range(max_transitions):
@@ -977,7 +978,7 @@ def create_part_class_workflow(request):
                 return TemplateResponse(request, 'bom/create-part-class-workflow.html', locals())
 
         else: # workflow form submitted
-
+            return HttpResponse(request.POST.items())
             has_final_state = False
             valid_transitions = []
             # As of now the onus is on the admins to ensure the states map correctly
