@@ -608,12 +608,6 @@ def part_info(request, part_id, part_revision_id=None):
             if 'change-assigned-users' in request.POST:
                 return functions.change_assigned_users_and_refresh(request, workflow_instance)
 
-            if 'force_approve_state' in request.POST: # maybe implement this
-                return HttpResponse("force approve")
-
-            if 'force_reject_state' in request.POST:
-                return HttpResponse("force reject")
-
     completed_transitions = PartClassWorkflowCompletedTransition.objects.filter(part=part)
     if workflow_instance:
         workflow_context = functions.get_part_workflow_context(request, workflow_instance)
@@ -914,6 +908,7 @@ def create_part_class_workflow(request):
     profile = user.bom_profile()
     title = 'Create New Part Class Workflow'
     max_transitions = constants.NUMBER_WORKFLOW_TRANSITIONS_MAX
+    max_transitions = 3
     transition_forms = []
 
     for i in range(max_transitions):
@@ -937,6 +932,7 @@ def create_part_class_workflow(request):
                 return TemplateResponse(request, 'bom/create-part-class-workflow.html', locals())
 
         else: # workflow form submitted
+            return HttpResponse(request.POST.items())
             workflow_form = PartClassWorkflowForm(request.POST)
             valid_workflow_results = functions.validate_new_workflow(request, workflow_form)
 
