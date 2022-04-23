@@ -238,7 +238,9 @@ def home(request):
         q = part_rev_query.format(part_list)
         part_revs = PartRevision.objects.raw(q)
 
+
     if 'download' in request.GET:
+        return HttpResponse(len(part_revs))
         response = HttpResponse(content_type='text/csv')
         response['Content-Disposition'] = 'attachment; filename="indabom_parts_search.csv"'
         csv_headers = organization.part_list_csv_headers()
