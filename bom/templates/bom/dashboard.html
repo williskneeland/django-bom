@@ -215,7 +215,17 @@
     <!-- Generating and downloading search results CSV -->
     <script>
         function generateAndDownloadCSV() {
-            console.log("{{csv_part_revs|safe}}")
+
+            // changing those darn single quotes into double quotes for json
+            let csv_headers = JSON.parse("{{ csv_fieldnames|safe }}".replace(/'/g, '"'));
+            let csv_rows = JSON.parse("{{ csv_part_revs|safe }}".replace(/'/g, '"'));
+
+            console.log(csv_headers);
+            console.log(csv_rows);
+
+            for (let i = 0; i < csv_headers.length; i++) {
+                console.log(csv_rows[0][csv_headers[i]]);
+            }
         }
     </script>
 
