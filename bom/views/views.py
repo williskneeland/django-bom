@@ -108,6 +108,7 @@ def home(request):
         return HttpResponseRedirect(reverse('bom:organization-create'))
 
     query = request.GET.get('q', '')
+    only_including_unreleased = request.GET.get('filter-unreleased', '')
     title = f'{organization.name}\'s'
 
     # Note that posting a PartClass selection does not include a named parameter in
@@ -145,12 +146,16 @@ def home(request):
     else:
         parts = Part.objects.filter(organization=organization)
 
+
+
     part_ids = list(parts.values_list('id', flat=True))
+    unreleased_filter = 'and pr.configuration = "W" ' if only_including_unreleased else ""
 
     part_rev_query = "select max(pr.id) as id from bom_partrevision as pr " \
                      "left join bom_part as p on pr.part_id = p.id " \
                      "left join bom_partclass as pc on pc.id = p.number_class_id " \
                      "where p.id in ({}) " \
+                     f"{unreleased_filter}" \
                      "group by pr.part_id " \
                      "order by pc.code, p.number_item, p.number_variation"
 
@@ -190,6 +195,8 @@ def home(request):
         number_class = None
         number_item = None
         number_variation = None
+
+
 
         # Scan for search terms that might represent a complete or partial part number
         if organization.number_scheme == constants.NUMBER_SCHEME_SEMI_INTELLIGENT:
