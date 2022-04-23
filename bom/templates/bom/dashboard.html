@@ -83,6 +83,9 @@
                 <div class="col s6 right-align">
                     <a class="button waves-effect waves-green btn-flat btn-icon-round tooltipped" data-position="bottom" data-tooltip="Download results as CSV." href="{% url 'bom:home' %}?download=1"><i
                             class="material-icons">file_download</i></a>
+
+                    <a class="button waves-effect waves-green btn-flat btn-icon-round tooltipped" data-position="bottom" data-tooltip="Download results as CSV." href="javascript:generateAndDownloadCSV()"><i
+                            class="material-icons">file_download</i></a>
                 </div>
             </div>
 
@@ -209,6 +212,13 @@
 {% endblock %}
 
 {% block bom-script %}
+    <!-- Generating and downloading search results CSV -->
+    <script>
+        function generateAndDownloadCSV() {
+            console.log("{{csv_part_revs|safe}}")
+        }
+    </script>
+
     <!-- Autocomplete -->
     <script>
         var data = JSON.parse('{{ autocomplete|safe }}');

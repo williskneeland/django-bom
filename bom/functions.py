@@ -19,6 +19,7 @@ from bom.forms import (
     CreatePartClassWorkflowTransitionForm,
 )
 
+
 def validate_new_workflow_state(workflow_state_form):
     valid_results = {'is_valid': True}
 

@@ -239,6 +239,50 @@ def home(request):
         part_revs = PartRevision.objects.raw(q)
 
 
+    # csv file data
+    csv_headers = organization.part_list_csv_headers()
+    csv_fieldnames = csv_headers.get_default_all()
+    seller_csv_headers = SellerPartCSVHeaders()
+    csv_part_revs = []
+    for part_rev in part_revs:
+        if organization.number_scheme == constants.NUMBER_SCHEME_SEMI_INTELLIGENT:
+            row = {
+                csv_headers.get_default('part_number'): part_rev.part.full_part_number(),
+                csv_headers.get_default('part_category'): part_rev.part.number_class.name,
+                csv_headers.get_default('part_revision'): part_rev.revision,
+                csv_headers.get_default('part_manufacturer'): part_rev.part.primary_manufacturer_part.manufacturer.name if part_rev.part.primary_manufacturer_part is not None and
+                                                                                                  part_rev.part.primary_manufacturer_part.manufacturer is not None else '',
+                csv_headers.get_default('part_manufacturer_part_number'): part_rev.part.primary_manufacturer_part.manufacturer_part_number if part_rev.part.primary_manufacturer_part is not None else '',
+            }
+            for field_name in csv_headers.get_default_all():
+                if field_name not in csv_headers.get_defaults_list(['part_number', 'part_category', 'part_synopsis', 'part_revision', 'part_manufacturer', 'part_manufacturer_part_number', ]
+                                                                   + seller_csv_headers.get_default_all()):
+                    attr = getattr(part_rev, field_name)
+                    row.update({csv_headers.get_default(field_name): attr if attr is not None else ''})
+        else:
+            row = {
+                csv_headers.get_default('part_number'): part_rev.part.full_part_number(),
+                csv_headers.get_default('part_revision'): part_rev.revision,
+                csv_headers.get_default('part_manufacturer'): part_rev.part.primary_manufacturer_part.manufacturer.name if part_rev.part.primary_manufacturer_part is not None and
+                                                                                                  part_rev.part.primary_manufacturer_part.manufacturer is not None else '',
+                csv_headers.get_default('part_manufacturer_part_number'): part_rev.part.primary_manufacturer_part.manufacturer_part_number if part_rev.part.primary_manufacturer_part is not None else '',
+            }
+            for field_name in csv_headers.get_default_all():
+                if field_name not in csv_headers.get_defaults_list(['part_number', 'part_synopsis', 'part_revision', 'part_manufacturer', 'part_manufacturer_part_number', ]
+                                                                   + seller_csv_headers.get_default_all()):
+                    attr = getattr(part_rev, field_name)
+                    row.update({csv_headers.get_default(field_name): attr if attr is not None else ''})
+
+        sellerparts = part_rev.part.seller_parts()
+        if len(sellerparts) > 0:
+            for sellerpart in part_rev.part.seller_parts():
+                for field_name in seller_csv_headers.get_default_all():
+                    attr = getattr(sellerpart, field_name)
+                    row.update({csv_headers.get_default(field_name): attr if attr is not None else ''})
+                csv_part_revs.append({k: smart_str(v) for k, v in row.items()})
+        else:
+            csv_part_revs.append({k: smart_str(v) for k, v in row.items()})
+
     if 'download' in request.GET:
         return HttpResponse(len(part_revs))
         response = HttpResponse(content_type='text/csv')
