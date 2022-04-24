@@ -266,6 +266,13 @@ def home(request):
                     attr = getattr(part_rev, field_name)
                     row.update({csv_headers.get_default(field_name): attr if attr is not None else ''})
 
+        # removing any single quotes before passing values to js for json parsing
+        for k, v in row.items():
+            row[k] = v.translate(str.maketrans({"'":""}))
+
+        for k in row:
+            print(row[k])
+
         sellerparts = part_rev.part.seller_parts()
         if len(sellerparts) > 0:
             for sellerpart in part_rev.part.seller_parts():
