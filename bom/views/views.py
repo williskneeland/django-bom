@@ -270,9 +270,6 @@ def home(request):
         for k, v in row.items():
             row[k] = v.translate(str.maketrans({"'":""}))
 
-        for k in row:
-            print(row[k])
-
         sellerparts = part_rev.part.seller_parts()
         if len(sellerparts) > 0:
             for sellerpart in part_rev.part.seller_parts():
