@@ -59,7 +59,7 @@
                 </div>
             </div>
         </form>
-        <form id="actionForm" name="action-form" action="{% url 'bom:home' %}" method="post" enctype="multipart/form-data">
+        <form id="actionForm" name="action-form" action="{% url 'bom:home' %}" method="get" enctype="multipart/form-data">
             {% csrf_token %}
             <div class="row actions-row" style="margin-bottom: 0;">
                 <div class="col s6 no-padding">

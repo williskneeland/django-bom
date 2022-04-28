@@ -167,14 +167,14 @@ def home(request):
 
     autocomplete_dict = {}
     for pr in part_revs:
-        autocomplete_dict.update({pr.searchable_synopsis.replace('"', ''): None})
+        autocomplete_dict.update({pr.searchable_synopsis.replace('"', '').replace("'", ""): None})
         autocomplete_dict.update({pr.part.full_part_number(): None})
 
     for mpn in manufacturer_parts:
         if mpn.manufacturer_part_number:
-            autocomplete_dict.update({mpn.manufacturer_part_number.replace('"', ''): None})
+            autocomplete_dict.update({mpn.manufacturer_part_number.replace('"', '').replace("'", ""): None})
         if mpn.manufacturer is not None and mpn.manufacturer.name:
-            autocomplete_dict.update({mpn.manufacturer.name.replace('"', ''): None})
+            autocomplete_dict.update({mpn.manufacturer.name.replace('"', '').replace("'", ""): None})
 
     autocomplete = dumps(autocomplete_dict)
 
@@ -189,8 +189,8 @@ def home(request):
         # is parsed as 'Big' 'Company' 'Inc.'
         search_terms = query_stripped
         search_terms = list(smart_split(search_terms))
-        search_terms = [search_term.replace('"', '') for search_term in search_terms]
-        noqoutes_query = query_stripped.replace('"', '')
+        search_terms = [search_term.replace('"', '').replace("'", "") for search_term in search_terms]
+        noqoutes_query = query_stripped.replace('"', '').replace("'", "")
 
         number_class = None
         number_item = None
@@ -238,7 +238,7 @@ def home(request):
         q = part_rev_query.format(part_list)
         part_revs = PartRevision.objects.raw(q)
 
-    # info for generating csv report
+    #info for generating csv report
     csv_headers = organization.part_list_csv_headers()
     csv_fieldnames = csv_headers.get_default_all()
     seller_csv_headers = SellerPartCSVHeaders()
@@ -266,9 +266,9 @@ def home(request):
                     attr = getattr(part_rev, field_name)
                     row.update({csv_headers.get_default(field_name): attr if attr is not None else ''})
 
-        # removing any single quotes before passing values to js for json parsing
+        # removing any single/double quotes before passing values to js for json parsing
         for k, v in row.items():
-            row[k] = v.translate(str.maketrans({"'":""}))
+            row[k] = v.replace('"', '').replace("'", "")
 
         sellerparts = part_rev.part.seller_parts()
         if len(sellerparts) > 0:
@@ -279,6 +279,43 @@ def home(request):
                 csv_part_revs.append({k: smart_str(v) for k, v in row.items()})
         else:
             csv_part_revs.append({k: smart_str(v) for k, v in row.items()})
+
+    # vanilla indabom csv downloader, why this doesn't work for me idk
+    # if 'download' in request.GET:
+    #     response = HttpResponse(content_type='text/csv')
+    #     response['Content-Disposition'] = 'attachment; filename="indabom_parts_search.csv"'
+    #     csv_headers = organization.part_list_csv_headers()
+    #     seller_csv_headers = SellerPartCSVHeaders()
+    #     writer = csv.DictWriter(response, fieldnames=csv_headers.get_default_all())
+    #     writer.writeheader()
+    #     for part_rev in part_revs:
+    #         if organization.number_scheme == constants.NUMBER_SCHEME_SEMI_INTELLIGENT:
+    #             row = {
+    #                 csv_headers.get_default('part_number'): part_rev.part.full_part_number(),
+    #                 csv_headers.get_default('part_category'): part_rev.part.number_class.name,
+    #                 csv_headers.get_default('part_revision'): part_rev.revision,
+    #                 csv_headers.get_default('part_manufacturer'): part_rev.part.primary_manufacturer_part.manufacturer.name if part_rev.part.primary_manufacturer_part is not None and
+    #                                                                                                   part_rev.part.primary_manufacturer_part.manufacturer is not None else '',
+    #                 csv_headers.get_default('part_manufacturer_part_number'): part_rev.part.primary_manufacturer_part.manufacturer_part_number if part_rev.part.primary_manufacturer_part is not None else '',
+    #             }
+    #             for field_name in csv_headers.get_default_all():
+    #                 if field_name not in csv_headers.get_defaults_list(['part_number', 'part_category', 'part_synopsis', 'part_revision', 'part_manufacturer', 'part_manufacturer_part_number', ] + seller_csv_headers.get_default_all()):
+    #                     attr = getattr(part_rev, field_name)
+    #                     row.update({csv_headers.get_default(field_name): attr if attr is not None else ''})
+    #         else:
+    #             row = {
+    #                 csv_headers.get_default('part_number'): part_rev.part.full_part_number(),
+    #                 csv_headers.get_default('part_revision'): part_rev.revision,
+    #                 csv_headers.get_default('part_manufacturer'): part_rev.part.primary_manufacturer_part.manufacturer.name if part_rev.part.primary_manufacturer_part is not None and
+    #                                                                                                   part_rev.part.primary_manufacturer_part.manufacturer is not None else '',
+    #                 csv_headers.get_default('part_manufacturer_part_number'): part_rev.part.primary_manufacturer_part.manufacturer_part_number if part_rev.part.primary_manufacturer_part is not None else '',
+    #             }
+    #             for field_name in csv_headers.get_default_all():
+    #                 if field_name not in csv_headers.get_defaults_list(['part_number', 'part_synopsis', 'part_revision', 'part_manufacturer', 'part_manufacturer_part_number', ] + seller_csv_headers.get_default_all()):
+    #                     attr = getattr(part_rev, field_name)
+    #                     row.update({csv_headers.get_default(field_name): attr if attr is not None else ''})
+    #         writer.writerow({k: smart_str(v) for k, v in row.items()})
+    #     return response
 
     paginator = Paginator(part_revs, 50)
 
