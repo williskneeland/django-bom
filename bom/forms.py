@@ -1054,7 +1054,7 @@ class PartRevisionNewForm(PartRevisionForm):
 class SubpartForm(forms.ModelForm):
     class Meta:
         model = Subpart
-        fields = ['part_revision', 'reference', 'count', 'do_not_load', 'alternatives']
+        fields = ['part_revision', 'reference', 'count', 'do_not_load', 'alternates']
 
     def __init__(self, *args, **kwargs):
         self.organization = kwargs.pop('organization', None)

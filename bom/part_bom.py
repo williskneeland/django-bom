@@ -96,7 +96,7 @@ class PartBom(AsDictModel):
 
 
 class PartBomItem(AsDictModel):
-    def __init__(self, bom_id, part, part_revision, do_not_load, references, quantity, extended_quantity, seller_part=None, alternatives=None):
+    def __init__(self, bom_id, part, part_revision, do_not_load, references, quantity, extended_quantity, seller_part=None, alternates=None):
         # top_level_quantity is the highest quantity, typically a order quantity for the highest assembly level in a BOM
         # A bom item should not care about its parent quantity
         self.bom_id = bom_id
@@ -116,7 +116,7 @@ class PartBomItem(AsDictModel):
         self.seller_part = seller_part
 
         self.api_info = None
-        self.alternatives = alternatives
+        self.alternates = alternates
 
     def extended_cost(self):
         try:

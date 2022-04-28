@@ -71,7 +71,7 @@
             <th class="text-normal">Price</th>
             <!-- <th class="text-normal"><i>Ext Cost</i></th> -->
             <th class="text-normal">NRE</th>
-            <th class="text-normal">Alternatives</th>
+            <th class="text-normal">Alternates</th>
             {% if profile.role == 'A' and manage %}
                 <th class="sorter-false" data-sorter="false">Manage</th>
             {% endif %}
@@ -121,10 +121,10 @@
                 <td class="text-normal" id="bom-indented-unit-cost-{{ subpart.part_revision.id }}">{{ subpart.seller_part.unit_cost | default:"-" }}</td>
                 <td class="text-normal">{{ subpart.seller_part.nre_cost | default:"-" }}</td>
                 <td class="text-normal">
-                    {% if subpart.alternatives.all|length > 0 %}
-                        <button type="button" onclick="toggleAlternativeCollapseIndent('alternatives{{subpart.subpart.id}}')" style="background-color: #eee;">Show/Hide</button>
-                        <div id="alternatives{{subpart.subpart.id}}" style="display: none;">
-                            {% for alternative in subpart.alternatives.all %}
+                    {% if subpart.alternates.all|length > 0 %}
+                        <button type="button" onclick="toggleAlternativeCollapseIndent('alternates{{subpart.subpart.id}}')" style="background-color: #eee;">Show/Hide</button>
+                        <div id="alternates{{subpart.subpart.id}}" style="display: none;">
+                            {% for alternative in subpart.alternates.all %}
                                 <div style="margin: 5px">
                                     <a href="{% url 'bom:part-info' part_id=alternative.part.id %}">{{alternative.part.full_part_number}}</a>
                                 </div>
