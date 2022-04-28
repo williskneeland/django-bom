@@ -38,7 +38,11 @@ python manage.py createsuperuser # make a user for your development environment
 3. Continue on to [Add Django Bom To Your App](#add-django-bom-to-your-app).
 
 ## Add Django Bom To Your App
-django-bom is a [reusable django application](https://docs.djangoproject.com/en/1.11/intro/reusable-apps/). If you don't already have a django project, you can follow some quick steps below to get up and running, or read about creating your first django app [here](https://docs.djangoproject.com/en/1.11/intro/tutorial01/). Note that django-bom currently supports python 2.7.
+django-bom is a [reusable django application](https://docs.djangoproject.com/en/1.11/intro/reusable-apps/). If you don't already have a django project, you can follow some quick steps below to get up and running, or read about creating your first django app [here](https://docs.djangoproject.com/en/1.11/intro/tutorial01/). Note that django-bom currently supports python 2.7. 
+```
+pip install django-bom
+```
+Alternatively, to gain access to the new features contained in this fork, use the following install instead
 
 ```
 pip install git+https://github.com/williskneeland/django-bom
