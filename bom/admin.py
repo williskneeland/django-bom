@@ -38,7 +38,6 @@ class PartClassWorkflowAdmin(admin.ModelAdmin):
 class PartClassWorkflowStateAdmin(admin.ModelAdmin):
     list_display = (
         'name',
-        # 'assigned_users'
     )
 
 
@@ -166,7 +165,7 @@ class AssemblyAdmin(admin.ModelAdmin):
 admin.site.unregister(User)
 
 admin.site.register(PartClassWorkflowCompletedTransition, PartClassWorkflowCompletedTransitionAdmin)
-admin.site.register(PartWorkflowInstance, PartWorkflowInstanceAdmin)
+# admin.site.register(PartWorkflowInstance, PartWorkflowInstanceAdmin)
 admin.site.register(PartClassWorkflowStateTransition, PartClassWorkflowStateTransitionAdmin)
 admin.site.register(PartClassWorkflowState, PartClassWorkflowStateAdmin)
 admin.site.register(PartClassWorkflow, PartClassWorkflowAdmin)

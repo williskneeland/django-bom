@@ -29,8 +29,8 @@
                     {% csrf_token %}
                     {{ add_subpart_form.subpart_part_number|materializecss:'m3 s12' }}
                     {{ add_subpart_form.count|materializecss:'m1 s12' }}
-                    {{ add_subpart_form.do_not_load|materializecss:'m1 s12 input-field materialize-checkbox-padding' }}
-                    {{ add_subpart_form.reference|materializecss:'m3 s12' }}
+                    {{ add_subpart_form.do_not_load|materializecss:'m2 s12 input-field materialize-checkbox-padding' }}
+                    {{ add_subpart_form.reference|materializecss:'m2 s12' }}
                     {{ add_subpart_form.alternates|materializecss:'m3 s12' }}
                     <div class="fieldWrapper">
                         <button class="waves-effect waves-light btn green lighten-1" type="submit" name="action">add
@@ -78,11 +78,6 @@
 {% block bom-script %}
     <!-- Tree Table -->
     <script src="{% static 'bom/js/jquery.treetable.js' %}"></script>
-    <script>
-        $('.add_alternates_select').select2({
-            closeOnSelect: false
-        });
-    </script>
     <script>
         $("#indented-bom").treetable({
             expandable: true,

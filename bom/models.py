@@ -139,13 +139,13 @@ class PartClassWorkflowState(models.Model):
     is_final_state = models.BooleanField(default=False, null=False)
     assigned_users = models.ManyToManyField(settings.AUTH_USER_MODEL)
 
-    @staticmethod
-    def get_all_states_tuple():
-        states = []
-        for state in PartClassWorkflowState.objects.all():
-            states.append((state.name, state.name))
-
-        return states
+    # @staticmethod
+    # def get_all_states_tuple():
+    #     states = []
+    #     for state in PartClassWorkflowState.objects.all():
+    #         states.append((state.name, state.name))
+    #
+    #     return states
 
 
     def __str__(self):
@@ -164,7 +164,6 @@ class PartClassWorkflow(models.Model):
             name=f'{self.name}:{full_part_number}',
             current_state=self.current_state
         )
-
         workflow_copy.save()
         return workflow_copy
 
@@ -416,7 +415,7 @@ class PartWorkflowInstance(models.Model):
 
 class PartClassWorkflowCompletedTransition(models.Model):
     transition = models.ForeignKey(PartClassWorkflowStateTransition, on_delete=models.CASCADE, null=True, default=None)
-    completed_by = models.ForeignKey(settings.AUTH_USER_MODEL, null=False, on_delete=models.DO_NOTHING, default=get_user_model().objects.first().pk)
+    completed_by = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, on_delete=models.SET_NULL, default=get_user_model().objects.first().pk)
     comments = models.CharField(max_length=500, null=True, blank=True, default='')
     timestamp = models.DateTimeField(auto_now_add=True, blank=True)
     part = models.ForeignKey(Part, null=False, default=None, on_delete=models.CASCADE)
@@ -427,8 +426,8 @@ class PartClassWorkflowCompletedTransition(models.Model):
 
 
     def __str__(self):
-        # if self.transition is not None:
-        #     return f"{self.transition.source_state})->({self.transition.target_state}) completed by: {self.transition.source_state.assigned_user}"
+        if self.transition:
+            return f"{self.transition.source_state})->({self.transition.target_state}):{self.transition.workflow}"
         return f"Completed workflow for {self.part}"
 
 
