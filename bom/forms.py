@@ -78,7 +78,10 @@ from .utils import (
 from .validators import alphanumeric, decimal, numeric
 from django.contrib.auth import get_user_model
 from django.conf import settings
-from django_select2.forms import Select2MultipleWidget
+from django_select2.forms import (
+    Select2MultipleWidget,
+    ModelSelect2MultipleWidget
+)
 
 
 logger = logging.getLogger(__name__)
@@ -794,10 +797,7 @@ class ChangeStateAssignedUsersForm(forms.ModelForm):
         fields = ['assigned_users']
 
     def __init__(self, *args, **kwargs):
-        try:
-            previous_assigned_users = kwargs.pop('previous_assigned_users')
-        except KeyError:
-            previous_assigned_users = None
+        previous_assigned_users = kwargs.pop('previous_assigned_users', None)
 
         super(ChangeStateAssignedUsersForm, self).__init__(*args, **kwargs)
         self.fields['comments'] = forms.CharField(label='Comments to new assigned users', required=False)
@@ -856,20 +856,9 @@ class PartClassWorkflowStateChangeForm(forms.ModelForm):
         fields = ['transition', 'comments', 'notifying_next_users']
 
     def __init__(self, *args, **kwargs):
-        try:
-            forward_transitions = kwargs.pop('forward_transitions')
-        except KeyError:
-            forward_transitions = None
-
-        try:
-            backward_transitions = kwargs.pop('backward_transitions')
-        except KeyError:
-            backward_transitions = None
-
-        try:
-            final_transition = kwargs.pop('final_transition')
-        except KeyError:
-            final_transition = False
+        forward_transitions = kwargs.pop('forward_transitions', None)
+        backward_transitions = kwargs.pop('backward_transitions', None)
+        final_transition = kwargs.pop('final_transition', None)
 
 
         super(PartClassWorkflowStateChangeForm, self).__init__(*args, **kwargs)
@@ -1100,6 +1089,13 @@ class AddSubpartForm(forms.Form):
     count = forms.FloatField(required=False, label='Quantity')
     reference = forms.CharField(required=False, label="Reference")
     do_not_load = forms.BooleanField(required=False, label="do_not_load")
+
+    alternates = forms.ModelMultipleChoiceField(
+        required=False,
+        queryset=PartRevision.objects.all(),
+        widget=Select2MultipleWidget()
+    )
+
 
     def __init__(self, *args, **kwargs):
         self.organization = kwargs.pop('organization', None)

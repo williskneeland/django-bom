@@ -38,11 +38,11 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'materializecssform',
-    'social_django',
-    'djmoney',
-    'djmoney.contrib.exchange',
-    'django_select2',
+    # 'materializecssform',
+    # 'social_django',
+    # 'djmoney',
+    # 'djmoney.contrib.exchange',
+    # 'django_select2',
 ]
 
 MIDDLEWARE = [
