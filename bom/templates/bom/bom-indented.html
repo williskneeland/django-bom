@@ -123,9 +123,11 @@
                 <td class="text-normal">
                     {% if subpart.alternatives.all|length > 0 %}
                         <button type="button" onclick="toggleCollapsibleAlternatives('alternatives{{subpart.subpart.id}}')" style="background-color: #eee;">Show/Hide</button>
-                        <div id="alternatives{{subpart.subpart.id}}" style="display: none; transition: max-height 0.2s ease-out;">
+                        <div id="alternatives{{subpart.subpart.id}}" style="display: none;">
                             {% for alternative in subpart.alternatives.all %}
-                                {{alternative}} <br />
+                                <div style="margin: 5px">
+                                    <a href="{% url 'bom:part-info' part_id=alternative.part.id %}">{{alternative.part.full_part_number}}</a>
+                                </div>
                             {% endfor %}
                         </div>
                     {% else %}

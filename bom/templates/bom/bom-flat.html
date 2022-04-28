@@ -80,6 +80,18 @@
                 <td class="text-normal" id="bom-flat-seller-name-{{ subpart.part_revision.id }}">{{ subpart.seller_part.seller.name | default:"-" }}</td>
                 <td class="text-normal" id="bom-flat-unit-cost-{{ subpart.part_revision.id }}">{{ subpart.seller_part.unit_cost | default:"-" }}</td>
                 <td class="text-normal">{{ subpart.seller_part.nre_cost | default:"-" }}</td>
+                <td class="text-normal">
+                    {% if subpart.alternatives.all|length > 0 %}
+                        <button type="button" onclick="toggleCollapsibleAlternatives('alternatives{{subpart.subpart.id}}')" style="background-color: #eee;">Show/Hide</button>
+                        <div id="alternatives{{subpart.subpart.id}}" style="display: none; transition: max-height 0.2s ease-out;">
+                            {% for alternative in subpart.alternatives.all %}
+                                {{alternative}} <br />
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        N/A
+                    {% endif %}
+                </td>
             </tr>
         {% empty %}
             <tr>
