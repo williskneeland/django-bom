@@ -137,7 +137,6 @@ class UserMeta(models.Model):
 class PartClassWorkflowState(models.Model):
     name = models.CharField(max_length=255, default='', null=True, blank=True)
     is_final_state = models.BooleanField(default=False, null=False)
-    # assigned_users = models.ForeignKey(settings.AUTH_USER_MODEL, null=False, on_delete=models.DO_NOTHING, default=get_user_model().objects.first().pk)
     assigned_users = models.ManyToManyField(settings.AUTH_USER_MODEL)
 
     @staticmethod
@@ -550,10 +549,11 @@ class PartRevision(models.Model):
         super(PartRevision, self).save(*args, **kwargs)
 
     def indented(self, top_level_quantity=100):
-        def indented_given_bom(bom, part_revision, parent_id=None, parent=None, qty=1, parent_qty=1, indent_level=0, subpart=None, reference='', do_not_load=False):
+        def indented_given_bom(bom, part_revision, parent_id=None, parent=None, qty=1, parent_qty=1, indent_level=0, subpart=None, reference='', do_not_load=False, alternatives=None):
             bom_item_id = (parent_id or '') + (str(part_revision.id) + '-dnl' if do_not_load else str(part_revision.id))
             extended_quantity = parent_qty * qty
             total_extended_quantity = top_level_quantity * extended_quantity
+
 
             try:
                 seller_part = part_revision.part.optimal_seller(quantity=total_extended_quantity)
@@ -573,6 +573,7 @@ class PartRevision(models.Model):
                 parent_id=parent_id,
                 subpart=subpart,
                 seller_part=seller_part,
+                alternatives=alternatives,
             ))
 
             indent_level = indent_level + 1
@@ -585,15 +586,17 @@ class PartRevision(models.Model):
                     qty = sp.count
                     reference = sp.reference
                     indented_given_bom(bom, sp.part_revision, parent_id=bom_item_id, parent=part_revision, qty=qty, parent_qty=parent_qty,
-                                       indent_level=indent_level, subpart=sp, reference=reference, do_not_load=sp.do_not_load)
+                                       indent_level=indent_level, subpart=sp, reference=reference, do_not_load=sp.do_not_load, alternatives=sp.alternatives)
 
         bom = PartBom(part_revision=self, quantity=top_level_quantity)
         indented_given_bom(bom, self)
 
+
+
         return bom
 
     def flat(self, top_level_quantity=100, sort=False):
-        def flat_given_bom(bom, part_revision, parent=None, qty=1, parent_qty=1, subpart=None, reference=''):
+        def flat_given_bom(bom, part_revision, parent=None, qty=1, parent_qty=1, subpart=None, reference='', alternatives=None):
             extended_quantity = parent_qty * qty
             total_extended_quantity = top_level_quantity * extended_quantity
 
@@ -617,6 +620,7 @@ class PartRevision(models.Model):
                 quantity=qty,
                 extended_quantity=extended_quantity,
                 seller_part=seller_part,
+                alternatives=alternatives,
             ))
 
             if part_revision is None or part_revision.assembly is None or part_revision.assembly.subparts.count() == 0:
@@ -626,7 +630,7 @@ class PartRevision(models.Model):
                 for sp in part_revision.assembly.subparts.all():
                     qty = sp.count
                     reference = sp.reference
-                    flat_given_bom(bom, sp.part_revision, parent=part_revision, qty=qty, parent_qty=parent_qty, subpart=sp, reference=reference)
+                    flat_given_bom(bom, sp.part_revision, parent=part_revision, qty=qty, parent_qty=parent_qty, subpart=sp, reference=reference, alternatives=sp.alternatives)
 
         flat_bom = PartBom(part_revision=self, quantity=top_level_quantity)
         flat_given_bom(flat_bom, self)
@@ -685,6 +689,7 @@ class Subpart(models.Model):
     count = models.FloatField(default=1, validators=[MinValueValidator(0)])
     reference = models.TextField(default='', blank=True, null=True)
     do_not_load = models.BooleanField(default=False, verbose_name='Do Not Load')
+    alternatives = models.ManyToManyField('PartRevision')
 
     def save(self, *args, **kwargs):
         # Make sure reference designators are formated as a string with comma-separated fields.
