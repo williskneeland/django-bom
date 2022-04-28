@@ -82,10 +82,12 @@
                 <td class="text-normal">{{ subpart.seller_part.nre_cost | default:"-" }}</td>
                 <td class="text-normal">
                     {% if subpart.alternatives.all|length > 0 %}
-                        <button type="button" onclick="toggleCollapsibleAlternatives('alternatives{{subpart.subpart.id}}')" style="background-color: #eee;">Show/Hide</button>
-                        <div id="alternatives{{subpart.subpart.id}}" style="display: none; transition: max-height 0.2s ease-out;">
+                        <button type="button" onclick="toggleAlternativeCollapseBom('alternatives{{subpart.part.id}}')" style="background-color: #eee;">Show/Hide</button>
+                        <div id="alternatives{{subpart.part.id}}" style="display: none;">
                             {% for alternative in subpart.alternatives.all %}
-                                {{alternative}} <br />
+                                <div style="margin: 5px">
+                                    <a href="{% url 'bom:part-info' part_id=alternative.part.id %}">{{alternative.part.full_part_number}}</a>
+                                </div>
                             {% endfor %}
                         </div>
                     {% else %}
@@ -122,6 +124,17 @@
         $('#flat-bom').trigger('sortReset');
         $('.button-reset-filter-flat').hide();
         return false;
+    }
+
+    function toggleAlternativeCollapseBom(altDivId) {
+        let collapsible = document.getElementById(altDivId);
+
+        if (collapsible.style.display === "none") {
+            collapsible.style.display = "block";
+        }
+        else {
+            collapsible.style.display = "none";
+        }
     }
 </script>
 

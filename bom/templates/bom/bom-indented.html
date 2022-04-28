@@ -122,7 +122,7 @@
                 <td class="text-normal">{{ subpart.seller_part.nre_cost | default:"-" }}</td>
                 <td class="text-normal">
                     {% if subpart.alternatives.all|length > 0 %}
-                        <button type="button" onclick="toggleCollapsibleAlternatives('alternatives{{subpart.subpart.id}}')" style="background-color: #eee;">Show/Hide</button>
+                        <button type="button" onclick="toggleAlternativeCollapseIndent('alternatives{{subpart.subpart.id}}')" style="background-color: #eee;">Show/Hide</button>
                         <div id="alternatives{{subpart.subpart.id}}" style="display: none;">
                             {% for alternative in subpart.alternatives.all %}
                                 <div style="margin: 5px">
@@ -196,7 +196,7 @@
         return false;
     }
 
-    function toggleCollapsibleAlternatives(altDivId) {
+    function toggleAlternativeCollapseIndent(altDivId) {
         let collapsible = document.getElementById(altDivId);
 
         if (collapsible.style.display === "none") {
@@ -205,7 +205,6 @@
         else {
             collapsible.style.display = "none";
         }
-
     }
 </script>
 
