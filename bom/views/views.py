@@ -971,7 +971,6 @@ def create_part_class_workflow(request):
                 return TemplateResponse(request, 'bom/create-part-class-workflow.html', locals())
 
         else: # workflow form submitted
-            return HttpResponse(request.POST.items())
             workflow_form = PartClassWorkflowForm(request.POST)
             valid_workflow_results = functions.validate_new_workflow(request, workflow_form)
 
