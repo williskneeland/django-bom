@@ -133,7 +133,7 @@ def get_part_workflow_context(request, workflow_instance):
         context['reject_state_form'] = PartClassWorkflowStateChangeForm(backward_transitions=context['current_backward_transitions'])
 
     if request.user.is_superuser or request.user.bom_profile().role == 'A' or context['is_assigned_user']:
-        context['change_assigned_users_form'] = ChangeStateAssignedUsersForm(previous_assigned_users=context['all_assigned_users'])
+        context['change_assigned_users_form'] = ChangeStateAssignedUsersForm()
         context['change_state_form_action'] = reverse('bom:part-info', kwargs={'part_id': workflow_instance.part.id})
 
     return context

@@ -797,8 +797,6 @@ class ChangeStateAssignedUsersForm(forms.ModelForm):
         fields = ['assigned_users']
 
     def __init__(self, *args, **kwargs):
-        previous_assigned_users = kwargs.pop('previous_assigned_users', None)
-
         super(ChangeStateAssignedUsersForm, self).__init__(*args, **kwargs)
         self.fields['comments'] = forms.CharField(label='Comments to new assigned users', required=False)
         self.fields['notify_new_users'] = forms.BooleanField(label="Notify new assigned users?", required=False, initial=True)
@@ -1105,6 +1103,9 @@ class AddSubpartForm(forms.Form):
         self.unusable_part_rev_ids = [pr.id for pr in self.part_revision.where_used_full()]
         self.unusable_part_rev_ids.append(self.part_revision.id)
         super(AddSubpartForm, self).__init__(*args, **kwargs)
+        # if self.part_id is not None: # should the container part be allowed as an alternate as a subpart?
+        #     self.fields['alternates'].queryset = self.fields['alternates'].queryset.exclude(id=self.part_id)
+
         self.fields['subpart_part_number'] = forms.CharField(required=True, label="Subpart part number",
                                                     widget=AutocompleteTextInput(attrs={'placeholder': 'Select a part.'},
                                                                                  queryset=Part.objects.filter(organization=self.organization).exclude(id=self.part_id),
