@@ -268,7 +268,7 @@ def home(request):
 
         # removing any single/double quotes before passing values to js for json parsing
         for k, v in row.items():
-            row[k] = v.replace('"', '').replace("'", "")
+            row[k] = str(v).replace('"', '').replace("'", "")
 
         sellerparts = part_rev.part.seller_parts()
         if len(sellerparts) > 0:
