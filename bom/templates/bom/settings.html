@@ -140,6 +140,53 @@
                         </div>
                     </form>
                 {% endif %}
+
+                {% if workflows.count > 0 %}
+                    <h3>Edit Part Class Workflows</h3>
+                    <a href="{% url 'bom:help' %}#part-numbering" target="_blank">What is a part class workflow?</a>
+
+                    <form name="seller" action="{% url 'bom:settings' tab_anchor=INDABOM_TAB %}" method="post" enctype="multipart/form-data">
+                        {% csrf_token %}
+
+                        <div class="row" style="margin-bottom: 0;">
+                            <div class="input-field col s8 m4">
+                                <select name="part-class-workflow-action">
+                                    <option value="" disabled selected>Choose your action</option>
+                                    <option value="submit-part-class-workflow-delete">Delete</option>
+                                </select>
+                                <label>Action</label>
+                            </div>
+                            <div class="col s2 m2">
+                                <div class="input-field">
+                                    <button class="waves-effect waves-light btn green lighten-1" type="submit">Go</button>
+                                </div>
+                            </div>
+                            <div class="col s2 m6 right-align">
+                                <div class="input-field">
+                                    <button class="waves-effect btn-flat btn-icon-round tooltipped" type="submit" name="submit-part-class-workflow-export" data-tooltip="Export part class workflows."><i
+                                            class="material-icons">file_download</i></button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <table class="striped tight">
+                            <tr>
+                                <th>Name</th>
+                                <th>Description</th>
+                                <th>Options</th>
+                            </tr>
+                            {% for workflow in workflows %}
+                                <tr>
+                                    <td>{{ workflow.name }}</td>
+                                    <td>Some description here for id {{workflow.id}}</td>
+                                    <td><a class="waves-effect waves-green btn-flat green-text text-lighten-1" href="#"><i
+                                            class="material-icons left green-text text-lighten-1">edit</i>Edit</a></td>
+                                </tr>
+                            {% endfor %}
+                        </table>
+                    </form>
+                {% endif %}
+
                 <h3>Change Organization Number Scheme</h3>
                 <p>Your organization's number scheme is currently: <b>{{ organization.get_number_scheme_display }}</b></p>
                 <ul class="browser-default">
@@ -170,6 +217,8 @@
                             Intelligent{% else %}Semi-Intelligent{% endif %}</button>
                     </form>
                 {% endif %}
+
+
             {% else %}
                 {% include 'bom/nothing-to-see.html' with required_privilege='Admin' %}
             {% endif %}

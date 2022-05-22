@@ -277,7 +277,6 @@ def home(request):
     #     else:
     #         csv_part_revs.append({k: smart_str(v) for k, v in row.items()})
 
-    # vanilla indabom csv downloader, why this doesn't work for me idk
     if 'download' in request.GET:
         response = HttpResponse(content_type='text/csv')
         response['Content-Disposition'] = 'attachment; filename="indabom_parts_search.csv"'
@@ -397,6 +396,7 @@ def bom_settings(request, tab_anchor=None):
     name = 'settings'
 
     part_classes = PartClass.objects.all().filter(organization=organization)
+    workflows = PartClassWorkflow.objects.all()
 
     users_in_organization = User.objects.filter(
         id__in=UserMeta.objects.filter(organization=organization).values_list('user', flat=True)).exclude(id__in=[organization.owner.id]).order_by(
