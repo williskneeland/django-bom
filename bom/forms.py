@@ -817,7 +817,7 @@ class CreatePartClassWorkflowTransitionForm(forms.ModelForm):
 class PartClassWorkflowForm(forms.ModelForm):
     class Meta:
         model = PartClassWorkflow
-        fields = ['name', 'initial_state']
+        fields = ['name', 'initial_state', 'description']
 
     def __init__(self, *args, **kwargs):
         super(PartClassWorkflowForm, self).__init__(*args, **kwargs)

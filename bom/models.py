@@ -158,6 +158,7 @@ class PartClassWorkflowState(models.Model):
 class PartClassWorkflow(models.Model):
     name = models.CharField(max_length=255, default=None, unique=True)
     initial_state = models.ForeignKey(PartClassWorkflowState, null=True, blank=True, default=None, on_delete=models.CASCADE)
+    description = models.CharField(max_length=255, default='', blank=True)
 
     def copy(self, full_part_number):
         workflow_copy = PartClassWorkflow(

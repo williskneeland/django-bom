@@ -179,7 +179,7 @@
                                 <tr>
                                     <td>{{ workflow.name }}</td>
                                     <td>Some description here for id {{workflow.id}}</td>
-                                    <td><a class="waves-effect waves-green btn-flat green-text text-lighten-1" href="#"><i
+                                    <td><a class="waves-effect waves-green btn-flat green-text text-lighten-1" href="{% url 'bom:edit-part-class-workflow' workflow_id=workflow.id %}"><i
                                             class="material-icons left green-text text-lighten-1">edit</i>Edit</a></td>
                                 </tr>
                             {% endfor %}

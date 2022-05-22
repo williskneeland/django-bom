@@ -44,7 +44,7 @@
 
                 <form id="transitions_form" name="form" action="{% url 'bom:create-part-class-workflow' %}" method="post" class="col s12">
                     {% csrf_token %}
-                    <h2>Workflow Name</h2>
+                    <h2>Workflow Information</h2>
                     <div class="row">
                         {{ workflow_form.non_field_errors }}
                         {{ workflow_form|materializecss:'m4 s12' }}
