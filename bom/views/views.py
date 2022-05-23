@@ -939,7 +939,7 @@ def export_part_list(request):
 
 
 @login_required
-def create_part_class_workflow(request):
+def create_part_class_workflow(request, workflow_id=None): # if id given, editing existing workflow
     user = request.user
     profile = user.bom_profile()
     title = 'Create New Part Class Workflow'
@@ -947,11 +947,19 @@ def create_part_class_workflow(request):
     max_transitions = 3
     transition_forms = []
 
+    if workflow_id:
+        existing_workflow = PartClassWorkflow.objects.filter(id=workflow_id).first()
+        title = f"Editing Workflow '{existing_workflow.name}'"
+
     for i in range(max_transitions):
         prefix = f'trans{i}'
         transition_forms.append(CreatePartClassWorkflowTransitionForm(prefix=prefix))
 
-    workflow_form = PartClassWorkflowForm(initial={'name': '', 'current_state': ''})
+    if workflow_id:
+        workflow_form = PartClassWorkflowForm(instance=existing_workflow)
+        existing_transitions = PartClassWorkflowStateTransition.objects.filter(workflow=existing_workflow)
+    else:
+        workflow_form = PartClassWorkflowForm(initial={'name': '', 'current_state': ''})
     new_state_form = CreatePartClassWorkflowStateForm()
     new_state_form_action = reverse('bom:create-part-class-workflow')
 
