@@ -944,22 +944,28 @@ def create_part_class_workflow(request, workflow_id=None): # if id given, editin
     profile = user.bom_profile()
     title = 'Create New Part Class Workflow'
     max_transitions = constants.NUMBER_WORKFLOW_TRANSITIONS_MAX
-    max_transitions = 3
+    #max_transitions = 3
     transition_forms = []
 
     if workflow_id:
         existing_workflow = PartClassWorkflow.objects.filter(id=workflow_id).first()
+        editing_existing_workflow = True
         title = f"Editing Workflow '{existing_workflow.name}'"
+
+    if workflow_id:
+        workflow_form = PartClassWorkflowForm(instance=existing_workflow)
+        existing_transitions = PartClassWorkflowStateTransition.objects.filter(workflow=existing_workflow, direction_in_workflow='forward')
+        for i in range(len(existing_transitions)):
+            prefix = f'trans{i}'
+            transition_forms.append(CreatePartClassWorkflowTransitionForm(instance=existing_transitions[i], prefix=prefix))
+        max_transitions -= len(existing_transitions)
+    else:
+        workflow_form = PartClassWorkflowForm(initial={'name': '', 'current_state': ''})
 
     for i in range(max_transitions):
         prefix = f'trans{i}'
         transition_forms.append(CreatePartClassWorkflowTransitionForm(prefix=prefix))
 
-    if workflow_id:
-        workflow_form = PartClassWorkflowForm(instance=existing_workflow)
-        existing_transitions = PartClassWorkflowStateTransition.objects.filter(workflow=existing_workflow)
-    else:
-        workflow_form = PartClassWorkflowForm(initial={'name': '', 'current_state': ''})
     new_state_form = CreatePartClassWorkflowStateForm()
     new_state_form_action = reverse('bom:create-part-class-workflow')
 

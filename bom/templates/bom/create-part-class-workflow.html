@@ -55,8 +55,8 @@
 
                     <div id="transitions">
                         {% for trans_form in transition_forms %}
-                            {% with index=forloop.counter0 counter=forloop.counter %}
-                                <div class="row" id="transition{{index}}" style="border: 2px solid #67ba6a; border-radius: 25px; padding: 20px 0 0 20px; display: {% if index == 0 %} block; {% else %} none; {% endif %}">
+                            {% with index=forloop.counter0 %}
+                                <div class="row" id="transition{{index}}" style="border: 2px solid #67ba6a; border-radius: 25px; padding: 20px 0 0 20px; display: {% if index == 0 %} block; {% elif existing_transitions and index < existing_transitions|length %} block; {% else %} none; {% endif %}">
                                     {{ trans_form.index.non_field_errors }}
                                     {{ trans_form|materializecss:'m4 s12' }}
                                     {% if index != 0 %}
