@@ -10,8 +10,8 @@ from bom import constants
 from bom.models import (
     PartClassWorkflowCompletedTransition,
     PartClassWorkflowStateTransition,
+    PartClassWorkflowState,
     PartClassWorkflow
-
 )
 from bom.forms import (
     PartClassWorkflowStateChangeForm,
@@ -19,6 +19,23 @@ from bom.forms import (
     CreatePartClassWorkflowTransitionForm,
 )
 
+def edit_existing_workflow(request, form):
+    workflow_id = request.POST.get('editing_existing_workflow') # this input stores the id in the request for simplicity
+    existing_workflow = PartClassWorkflow.objects.filter(id=workflow_id).first()
+    if len(form.data['name']) > 0:
+        existing_workflow.name = form.data['name']
+    else:
+        return False
+
+    if form.data['initial_state'] is not None:
+        existing_workflow.initial_state = PartClassWorkflowState.objects.filter(id=form.data['initial_state']).first()
+    else:
+        return False
+
+
+    existing_workflow.description = form.data['description']
+    existing_workflow.save()
+    return True
 
 def validate_new_workflow_state(workflow_state_form):
     valid_results = {'is_valid': True}
@@ -58,6 +75,24 @@ def create_transitions(transitions, workflow_name):
         except:
             pass
 
+def validate_transition_forms(request, workflow_form):
+    result = {
+        'has_final_state': False,
+        'has_initial_state': False,
+        'valid_transitions': []
+    }
+
+    for i in range(constants.NUMBER_WORKFLOW_TRANSITIONS_MAX):
+        transition_form = CreatePartClassWorkflowTransitionForm(request.POST, prefix="trans{}".format(i))
+        if transition_form.is_valid():
+            result['valid_transitions'].append(transition_form.cleaned_data)
+            if transition_form.cleaned_data['target_state'].is_final_state:
+                result['has_final_state'] = True
+            if transition_form.cleaned_data['source_state'] == workflow_form.cleaned_data['initial_state']:
+                result['has_initial_state'] = True
+    return result
+    
+
 def validate_new_workflow(request, workflow_form):
     valid_results = { 'is_valid': True }
 
@@ -66,32 +101,21 @@ def validate_new_workflow(request, workflow_form):
         valid_results['error_msg'] = "Invalid entries for workflow"
         return valid_results
 
-    has_final_state = False
-    has_initial_state = False
-    valid_transitions = []
+    valid_transition_results = validate_transition_forms(request, workflow_form)
 
-    for i in range(constants.NUMBER_WORKFLOW_TRANSITIONS_MAX):
-        transition_form = CreatePartClassWorkflowTransitionForm(request.POST, prefix="trans{}".format(i))
-        if transition_form.is_valid():
-            valid_transitions.append(transition_form.cleaned_data)
-            if transition_form.cleaned_data['target_state'].is_final_state:
-                has_final_state = True
-            if transition_form.cleaned_data['source_state'] == workflow_form.cleaned_data['initial_state']:
-                has_initial_state = True
-
-    if not has_final_state:
+    if not valid_transition_results['has_final_state']:
         valid_results['is_valid'] = False
         valid_results['error_msg'] = "Must be able to transition to a final state."
 
-    if not has_initial_state:
+    if not valid_transition_results['has_initial_state']:
         valid_results['is_valid'] = False
         valid_results['error_msg'] = "Transitions must contain the workflow's initial state."
 
-    if len(valid_transitions) == 0:
+    if len(valid_transition_results['valid_transitions']) == 0:
         valid_results['is_valid'] = False
         valid_results['error_msg'] = "You cannot create a workflow without defining any state transitions."
 
-    valid_results['valid_transitions'] = valid_transitions
+    valid_results['valid_transitions'] = valid_transition_results['valid_transitions']
 
     return valid_results
 

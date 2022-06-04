@@ -44,6 +44,7 @@
 
                 <form id="transitions_form" name="form" action="{% url 'bom:create-part-class-workflow' %}" method="post" class="col s12">
                     {% csrf_token %}
+                    {% if editing_existing_workflow %}<input type="hidden" name="editing_existing_workflow" value="{{existing_workflow.id}}"/>{% endif %}
                     <h2>Workflow Information</h2>
                     <div class="row">
                         {{ workflow_form.non_field_errors }}

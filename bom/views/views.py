@@ -947,12 +947,17 @@ def create_part_class_workflow(request, workflow_id=None): # if id given, editin
     #max_transitions = 3
     transition_forms = []
 
+    # if workflow_id:
+    #     existing_workflow = PartClassWorkflow.objects.filter(id=workflow_id).first()
+    #     editing_existing_workflow = True
+    #     title = f"Editing Workflow '{existing_workflow.name}'"
+
     if workflow_id:
         existing_workflow = PartClassWorkflow.objects.filter(id=workflow_id).first()
         editing_existing_workflow = True
         title = f"Editing Workflow '{existing_workflow.name}'"
 
-    if workflow_id:
+        # fetching the workflows transitions
         workflow_form = PartClassWorkflowForm(instance=existing_workflow)
         existing_transitions = PartClassWorkflowStateTransition.objects.filter(workflow=existing_workflow, direction_in_workflow='forward')
         for i in range(len(existing_transitions)):
@@ -983,6 +988,11 @@ def create_part_class_workflow(request, workflow_id=None): # if id given, editin
 
         else: # workflow form submitted
             workflow_form = PartClassWorkflowForm(request.POST)
+            if 'editing_existing_workflow' in request.POST:
+                workflow_id = request.POST.get('editing_existing_workflow')
+                if functions.edit_existing_workflow(request, workflow_form):
+                    return HttpResponse('saved')
+                return HttpResponse(workflow_id)
             valid_workflow_results = functions.validate_new_workflow(request, workflow_form)
 
             if not valid_workflow_results['is_valid']:
