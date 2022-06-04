@@ -992,15 +992,16 @@ def create_part_class_workflow(request, workflow_id=None): # if id given, editin
                 workflow_id = request.POST.get('editing_existing_workflow')
                 if functions.edit_existing_workflow(request, workflow_form):
                     return HttpResponse('saved')
-                return HttpResponse(workflow_id)
+                return HttpResponse('not saved')
+
             valid_workflow_results = functions.validate_new_workflow(request, workflow_form)
 
             if not valid_workflow_results['is_valid']:
                 messages.error(request, valid_workflow_results['error_msg'])
                 return TemplateResponse(request, 'bom/create-part-class-workflow.html', locals())
 
-            workflow_form.save()
-            functions.create_transitions(valid_workflow_results['valid_transitions'], workflow_form.cleaned_data['name'])
+            workflow_id = workflow_form.save().id
+            functions.create_transitions(valid_workflow_results['valid_transitions'], workflow_id)
             messages.success(request, "Workflow created!")
 
     return TemplateResponse(request, 'bom/create-part-class-workflow.html', locals())
