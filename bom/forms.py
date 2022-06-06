@@ -839,7 +839,7 @@ class PartClassWorkflowStateForm(forms.ModelForm):
 class CreatePartClassWorkflowStateForm(forms.ModelForm):
     class Meta:
         model = PartClassWorkflowState
-        fields = ['name', 'assigned_users', 'is_final_state']
+        fields = ['name', 'assigned_users', 'is_final_state', 'description']
 
     def __init__(self, *args, **kwargs):
         super(CreatePartClassWorkflowStateForm, self).__init__(*args, **kwargs)

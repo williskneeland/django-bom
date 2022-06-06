@@ -1004,7 +1004,28 @@ def create_part_class_workflow(request, workflow_id=None): # if id given, editin
 
 @login_required
 def workflow_state_edit(request, state_id):
-    return HttpResponse("editing " + str(state_id))
+    user = request.user
+    profile = user.bom_profile()
+    organization = profile.organization
+
+    state = get_object_or_404(PartClassWorkflowState, pk=state_id)
+    title = f"Edit Workflow State '{state.name}'"
+
+    if request.method == "POST":
+        workflow_state_form = CreatePartClassWorkflowStateForm(request.POST, instance=state)
+        if workflow_state_form.is_valid():
+            workflow_state_form.save()
+            messages.success(request, 'Changes saved!')
+            return HttpResponseRedirect(reverse('bom:settings', kwargs={'tab_anchor': 'indabom'}))
+        else:
+            return TemplateResponse(request, 'bom/edit-workflow-state.html', locals())
+
+    else:
+        workflow_state_form = CreatePartClassWorkflowStateForm(instance=state)
+
+    return TemplateResponse(request, 'bom/edit-workflow-state.html', locals())
+
+
 
 @login_required
 def create_part(request):
