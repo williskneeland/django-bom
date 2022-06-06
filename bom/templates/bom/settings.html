@@ -143,12 +143,6 @@
                                         <button class="waves-effect waves-light btn green lighten-1" type="submit">Go</button>
                                     </div>
                                 </div>
-                                <div class="col s2 m6 right-align">
-                                    <div class="input-field">
-                                        <button class="waves-effect btn-flat btn-icon-round tooltipped" type="submit" name="submit-part-class-workflow-export" data-tooltip="Export part class workflows."><i
-                                                class="material-icons">file_download</i></button>
-                                    </div>
-                                </div>
                             </div>
 
                             <table class="striped tight">
@@ -165,13 +159,65 @@
                                         </td>
                                         <td>{{ workflow.name }}</td>
                                         <td>{{ workflow.description }}</td>
-                                        <td><a class="waves-effect waves-green btn-flat green-text text-lighten-1" href="{% url 'bom:edit-part-class-workflow' workflow_id=workflow.id %}"><i
+                                        <td><a class="waves-effect waves-green btn-flat green-text text-lighten-1" href="{% url 'bom:part-class-workflow-edit' workflow_id=workflow.id %}"><i
                                                 class="material-icons left green-text text-lighten-1">edit</i>Edit</a></td>
                                     </tr>
                                 {% endfor %}
                             </table>
                         </form>
                     {% endif %}
+
+                    {% if workflow_states.count > 0 %}
+                        <h3>Edit Part Class Workflow States</h3>
+                        <a href="{% url 'bom:help' %}#part-numbering" target="_blank">What is a workflow state?</a>
+
+                        <form name="seller" action="{% url 'bom:settings' tab_anchor=INDABOM_TAB %}" method="post" enctype="multipart/form-data">
+                            {% csrf_token %}
+
+                            <div class="row" style="margin-bottom: 0;">
+                                <div class="input-field col s8 m4">
+                                    <select name="workflow-state-action">
+                                        <option value="" disabled selected>Choose your action</option>
+                                        <option value="submit-workflow-state-delete">Delete</option>
+                                    </select>
+                                    <label>Action</label>
+                                </div>
+                                <div class="col s2 m2">
+                                    <div class="input-field">
+                                        <button class="waves-effect waves-light btn green lighten-1" type="submit">Go</button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <table class="striped tight">
+                                <tr>
+                                    <th class="text-normal"><label><input type="checkbox" id="workflow-state-select-all"><span></span></label></th>
+                                    <th>Name</th>
+                                    <th>Is final state?</th>
+                                    <th>Assigned to</th>
+                                    <th>Options</th>
+                                </tr>
+                                {% for state in workflow_states %}
+                                    <tr>
+                                        <td>
+                                            <label><input type="checkbox" class="filled-in checkbox-array" name="actions" value="{{ workflow.id }}"><span></span></label>
+                                        </td>
+                                        <td>{{ state.name }}</td>
+                                        <td>{{ state.is_final_state }}</td>
+                                        <td>
+                                            {% for assigned_user in state.assigned_users.all %}
+                                                {{ assigned_user }} <br />
+                                            {% endfor %}
+                                        </td>
+                                        <td><a class="waves-effect waves-green btn-flat green-text text-lighten-1" href="{% url 'bom:workflow-state-edit' state_id=state.id %}"><i
+                                                class="material-icons left green-text text-lighten-1">edit</i>Edit</a></td>
+                                    </tr>
+                                {% endfor %}
+                            </table>
+                        </form>
+                    {% endif %}
+
+
                     <div class="row" style="padding-top: 16px;">
                         <div class="col s12 right-align">
                             <a href="{% url 'bom:create-part-class-workflow' %}" class="waves-effect waves-light btn green lighten-1">Add Part Class Workflow</a>
@@ -194,6 +240,8 @@
                         </div>
                     </form>
                 {% endif %}
+
+
 
 
                 <h3>Change Organization Number Scheme</h3>
@@ -432,6 +480,18 @@
 
         $(document).ready(function () {
             const selectAllId = '#part-class-workflow-select-all';
+            $(selectAllId).change(function () {
+                var table = $(selectAllId).closest('table');
+                if ($(selectAllId).is(':checked')) {
+                    $("input[type='checkbox']:not(:checked)", table).prop("checked", true);
+                } else {
+                    $("input[type='checkbox']:checked", table).prop("checked", false);
+                }
+            });
+        });
+
+        $(document).ready(function () {
+            const selectAllId = '#workflow-state-select-all';
             $(selectAllId).change(function () {
                 var table = $(selectAllId).closest('table');
                 if ($(selectAllId).is(':checked')) {

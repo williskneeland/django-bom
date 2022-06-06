@@ -138,15 +138,7 @@ class PartClassWorkflowState(models.Model):
     name = models.CharField(max_length=255, default='', null=True, blank=True)
     is_final_state = models.BooleanField(default=False, null=False)
     assigned_users = models.ManyToManyField(settings.AUTH_USER_MODEL)
-
-    # @staticmethod
-    # def get_all_states_tuple():
-    #     states = []
-    #     for state in PartClassWorkflowState.objects.all():
-    #         states.append((state.name, state.name))
-    #
-    #     return states
-
+    description = models.CharField(max_length=255, default='', blank=True)
 
     def __str__(self):
         if self.is_final_state:

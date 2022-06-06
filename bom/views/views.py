@@ -397,6 +397,7 @@ def bom_settings(request, tab_anchor=None):
 
     part_classes = PartClass.objects.all().filter(organization=organization)
     workflows = PartClassWorkflow.objects.all()
+    workflow_states = PartClassWorkflowState.objects.all()
 
     users_in_organization = User.objects.filter(
         id__in=UserMeta.objects.filter(organization=organization).values_list('user', flat=True)).exclude(id__in=[organization.owner.id]).order_by(
@@ -987,7 +988,7 @@ def create_part_class_workflow(request, workflow_id=None): # if id given, editin
                 workflow_id = request.POST.get('editing_existing_workflow')
                 if functions.edit_existing_workflow(request, workflow_form):
                     messages.success(request, 'Changes saved!')
-                return HttpResponseRedirect(reverse('bom:edit-part-class-workflow', kwargs={'workflow_id': workflow_id}))
+                return HttpResponseRedirect(reverse('bom:part-class-workflow-edit', kwargs={'workflow_id': workflow_id}))
 
             valid_workflow_results = functions.validate_new_workflow(request, workflow_form)
 
@@ -1001,6 +1002,9 @@ def create_part_class_workflow(request, workflow_id=None): # if id given, editin
 
     return TemplateResponse(request, 'bom/create-part-class-workflow.html', locals())
 
+@login_required
+def workflow_state_edit(request, state_id):
+    return HttpResponse("editing " + str(state_id))
 
 @login_required
 def create_part(request):
