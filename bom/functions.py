@@ -29,12 +29,11 @@ def validate_transition_forms(request, workflow_form):
     for i in range(constants.NUMBER_WORKFLOW_TRANSITIONS_MAX):
         transition_form = CreatePartClassWorkflowTransitionForm(request.POST, prefix="trans{}".format(i))
         if transition_form.is_valid():
+            print("got a valid")
             result['valid_transitions'].append(transition_form.cleaned_data)
             if transition_form.cleaned_data['target_state'].is_final_state:
-                print('HAS FINAL STATE')
                 result['has_final_state'] = True
             if transition_form.cleaned_data['source_state'] == PartClassWorkflowState.objects.filter(id=workflow_form.data['initial_state']).first():
-                print('HAS INITIAL STATE')
                 result['has_initial_state'] = True
 
     return result
@@ -72,7 +71,7 @@ def edit_existing_workflow(request, form):
     if transitions_error_msg:
         print(transitions_error_msg)
         messages.error(request, transitions_error_msg)
-        return False
+        #return False
 
     # Delete all existing transitions to recreate them.
     PartClassWorkflowStateTransition.objects.filter(workflow=existing_workflow).delete()

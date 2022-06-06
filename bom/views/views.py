@@ -944,15 +944,10 @@ def create_part_class_workflow(request, workflow_id=None): # if id given, editin
     profile = user.bom_profile()
     title = 'Create New Part Class Workflow'
     max_transitions = constants.NUMBER_WORKFLOW_TRANSITIONS_MAX
-    #max_transitions = 3
+    restored_transitions = 0
     transition_forms = []
 
-    # if workflow_id:
-    #     existing_workflow = PartClassWorkflow.objects.filter(id=workflow_id).first()
-    #     editing_existing_workflow = True
-    #     title = f"Editing Workflow '{existing_workflow.name}'"
-
-    if workflow_id:
+    if workflow_id:  # Editing existing workflow
         existing_workflow = PartClassWorkflow.objects.filter(id=workflow_id).first()
         editing_existing_workflow = True
         title = f"Editing Workflow '{existing_workflow.name}'"
@@ -963,11 +958,11 @@ def create_part_class_workflow(request, workflow_id=None): # if id given, editin
         for i in range(len(existing_transitions)):
             prefix = f'trans{i}'
             transition_forms.append(CreatePartClassWorkflowTransitionForm(instance=existing_transitions[i], prefix=prefix))
-        max_transitions -= len(existing_transitions)
+            restored_transitions += 1
     else:
         workflow_form = PartClassWorkflowForm(initial={'name': '', 'current_state': ''})
 
-    for i in range(max_transitions):
+    for i in range(restored_transitions, max_transitions):
         prefix = f'trans{i}'
         transition_forms.append(CreatePartClassWorkflowTransitionForm(prefix=prefix))
 
@@ -991,8 +986,11 @@ def create_part_class_workflow(request, workflow_id=None): # if id given, editin
             if 'editing_existing_workflow' in request.POST:
                 workflow_id = request.POST.get('editing_existing_workflow')
                 if functions.edit_existing_workflow(request, workflow_form):
-                    return HttpResponse('saved')
-                return HttpResponse('not saved')
+                    messages.success(request, 'Changes saved!')
+                else:
+                    messages.error(request, 'Error saving changes')
+
+                return HttpResponseRedirect(reverse('bom:edit-part-class-workflow', kwargs={'workflow_id': workflow_id}))
 
             valid_workflow_results = functions.validate_new_workflow(request, workflow_form)
 

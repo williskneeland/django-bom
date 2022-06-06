@@ -52,7 +52,6 @@
                     </div>
 
                     <h2>State Transitions</h2>
-                    <p>Note that the maximum allowed number of state transitions for each workflow is {{ max_transitions }}</p>
 
                     <div id="transitions">
                         {% for trans_form in transition_forms %}
@@ -71,9 +70,31 @@
                                 </div>
                             {% endwith %}
                         {% endfor %}
+                        <script>
+                            let editingExistingWorkflow = ("{{workflow_id}}" != "None");
+                            if (editingExistingWorkflow) {
+                                // let existingTransitions = JSON.parse("{{existing_transitions|safe}}");
+                                console.log("{{existing_transitions|safe}}");
+                                {% for i in existing_transitions %}
+                                    var selects = document.getElementById("transition{{forloop.counter0}}").getElementsByTagName("select");
+                                    var selectedSource = "{{ i.source_state|safe }}";
+                                    var selectedTarget = "{{ i.target_state|safe }}";
+
+                                    // for (var i = 0; i < selects[0].options.length; i++) {
+                                    //     if (selects[0].options[i].text == selectedSource) {
+                                    //         selects[0].options[i].selected = true;
+                                    //     }
+                                    //     if (selects[1].options[i].text == selectedTarget) {
+                                    //         selects[1].options[i].selected = true;
+                                    //     }
+                                    // }
+                                    console.log(selects);
+                                {% endfor  %}
+                            }
+                        </script>
                     </div>
 
-                    <!--      Submit / Cancel        -->
+                    <!--      Submit / Cancel      -->
                     <div class="row">
                         <div class="col s6">
                             <a href="javascript:history.back()" class="waves-effect waves-light btn-flat grey-text lighten-1" style="margin-left: -16px;">Cancel</a>
