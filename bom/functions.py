@@ -59,7 +59,7 @@ def edit_existing_workflow(request, form):
         messages.error(request, 'The workflow name cannot be blank.')
         return False
 
-    if form.data['initial_state'] is not None:
+    if len(form.data['initial_state']) > 0:
         existing_workflow.initial_state = PartClassWorkflowState.objects.filter(id=form.data['initial_state']).first()
     else:
         print('An initial state must be selected.')
@@ -71,7 +71,7 @@ def edit_existing_workflow(request, form):
     if transitions_error_msg:
         print(transitions_error_msg)
         messages.error(request, transitions_error_msg)
-        #return False
+        return False
 
     # Delete all existing transitions to recreate them.
     PartClassWorkflowStateTransition.objects.filter(workflow=existing_workflow).delete()

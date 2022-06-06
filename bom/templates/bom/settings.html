@@ -153,12 +153,16 @@
 
                             <table class="striped tight">
                                 <tr>
+                                    <th class="text-normal"><label><input type="checkbox" id="part-class-workflow-select-all"><span></span></label></th>
                                     <th>Name</th>
                                     <th>Description</th>
                                     <th>Options</th>
                                 </tr>
                                 {% for workflow in workflows %}
                                     <tr>
+                                        <td>
+                                            <label><input type="checkbox" class="filled-in checkbox-array" name="actions" value="{{ workflow.id }}"><span></span></label>
+                                        </td>
                                         <td>{{ workflow.name }}</td>
                                         <td>{{ workflow.description }}</td>
                                         <td><a class="waves-effect waves-green btn-flat green-text text-lighten-1" href="{% url 'bom:edit-part-class-workflow' workflow_id=workflow.id %}"><i
@@ -422,6 +426,18 @@
                     $("input[type='checkbox']:not(:checked)", table).prop("checked", true)
                 } else {
                     $("input[type='checkbox']:checked", table).prop("checked", false)
+                }
+            });
+        });
+
+        $(document).ready(function () {
+            const selectAllId = '#part-class-workflow-select-all';
+            $(selectAllId).change(function () {
+                var table = $(selectAllId).closest('table');
+                if ($(selectAllId).is(':checked')) {
+                    $("input[type='checkbox']:not(:checked)", table).prop("checked", true);
+                } else {
+                    $("input[type='checkbox']:checked", table).prop("checked", false);
                 }
             });
         });

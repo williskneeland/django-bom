@@ -987,9 +987,6 @@ def create_part_class_workflow(request, workflow_id=None): # if id given, editin
                 workflow_id = request.POST.get('editing_existing_workflow')
                 if functions.edit_existing_workflow(request, workflow_form):
                     messages.success(request, 'Changes saved!')
-                else:
-                    messages.error(request, 'Error saving changes')
-
                 return HttpResponseRedirect(reverse('bom:edit-part-class-workflow', kwargs={'workflow_id': workflow_id}))
 
             valid_workflow_results = functions.validate_new_workflow(request, workflow_form)
