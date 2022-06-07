@@ -271,6 +271,33 @@
                         However, you can revert a &ldquo;Released&rdquo; part back to &ldquo;Working&rdquo;, edit the specification or create additional revisions, and then re-tag the part as &ldquo;Released&rdquo;.</p>
 
                     <div class="divider"></div>
+                    <a class="anchor" id="part-class-workflows"></a>
+                </div>
+                <div class="section scrollspy">
+                    <h3>Part Class Workflows</h3>
+                    <p>
+                        When creating a new part class, an IndaBOM user has the choice to assign a workflow to it. A workflow contains a name, a description, an initial state, and a set of state transitions
+                        associated with it.  These workflows allow each part to undergo a set of user-defined steps before that part can be released. Each step must be approved by either the assigned user
+                        or an IndaBOM administrator before moving to the next step in the part’s workflow. This allows different aspects of each part to be examined in greater detail, decreasing the chances
+                        of mistakes before a part is released.
+                    </p>
+                </div>
+                <div class="section scrollspy">
+                    <h4>Workflow States</h4>
+                    <p>
+                        Each step in a part class workflow is called a state. A state consists of a name, a description, a list of assigned users, and if the state is the last in the workflow being defined.
+                        A state can be approved or rejected by any of its assigned users or by an IndaBOM administrator. If a given state is approved, the workflow advances to the next state. While
+                        rejecting a state will move the workflow to the previous state. If a state is marked as the final in a workflow, approving this state will complete the workflow.
+                    </p>
+                </div>
+                <div class="section scrollspy">
+                    <h4>Workflow Transitions</h4>
+                    <p>
+                        Moving between workflow states is accomplished using transitions. Each transition contains a source state and a target state. A workflow is nothing more than a collection of
+                        transitions that allow the workflow to move between the desired steps.
+                    </p>
+
+                    <div class="divider"></div>
                     <a class="anchor" id="application-guide"></a>
                 </div>
                 <div class="section scrollspy">

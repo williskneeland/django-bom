@@ -125,7 +125,7 @@
 
                     {% if workflows.count > 0 %}
                         <h3>Edit Part Class Workflows</h3>
-                        <a href="{% url 'bom:help' %}#part-numbering" target="_blank">What is a part class workflow?</a>
+                        <a href="{% url 'bom:help' %}#part-class-workflows" target="_blank">What is a part class workflow?</a>
 
                         <form name="seller" action="{% url 'bom:settings' tab_anchor=INDABOM_TAB %}" method="post" enctype="multipart/form-data">
                             {% csrf_token %}
@@ -174,7 +174,7 @@
 
                     {% if workflow_states.count > 0 %}
                         <h3>Edit Part Class Workflow States</h3>
-                        <a href="{% url 'bom:help' %}#part-numbering" target="_blank">What is a workflow state?</a>
+                        <a href="{% url 'bom:help' %}#part-class-workflows" target="_blank" target="_blank">What is a workflow state?</a>
 
                         <form name="seller" action="{% url 'bom:settings' tab_anchor=INDABOM_TAB %}" method="post" enctype="multipart/form-data">
                             {% csrf_token %}
