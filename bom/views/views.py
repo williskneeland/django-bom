@@ -558,6 +558,13 @@ def bom_settings(request, tab_anchor=None):
                 if users_in_organization == 0:
                     organization.delete()
 
+        elif 'submit-workflow-state-create' in request.POST:
+            workflow_state_form = CreatePartClassWorkflowStateForm(request.POST)
+            if workflow_state_form.is_valid():
+                workflow_state_form.save()
+            else:
+                messages.error(request, workflow_state_form.errors)
+
     user_form = UserForm(instance=user)
     user_add_form = UserAddForm()
     user_add_form_action = reverse('bom:settings', kwargs={'tab_anchor': ORGANIZATION_TAB})
@@ -568,6 +575,8 @@ def bom_settings(request, tab_anchor=None):
     part_class_form = PartClassForm(organization=organization)
     part_class_form_action = reverse('bom:settings', kwargs={'tab_anchor': INDABOM_TAB})
     part_class_csv_form = PartClassCSVForm(organization=organization)
+    workflow_state_form = CreatePartClassWorkflowStateForm()
+    workflow_state_form_action = reverse('bom:settings', kwargs={'tab_anchor': INDABOM_TAB})
 
     return TemplateResponse(request, 'bom/settings.html', locals())
 
