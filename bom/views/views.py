@@ -413,6 +413,9 @@ def bom_settings(request, tab_anchor=None):
     if request.method == 'POST':
         part_class_action_ids = request.POST.getlist('actions')
         part_class_action = request.POST.get('part-class-action')
+        part_class_workflow_action = request.POST.get('part-class-workflow-action')
+        workflow_state_action = request.POST.get('workflow-state-action')
+
         if 'submit-edit-user' in request.POST:
             tab_anchor = USER_TAB
             user_form = UserForm(request.POST, instance=user)
@@ -536,6 +539,26 @@ def bom_settings(request, tab_anchor=None):
                     messages.error(request, f"No part class found: {err}")
                 except ProtectedError as err:
                     messages.error(request, f"Cannot delete a part class because it has parts. You must delete those parts first. {err}")
+        elif 'part-class-workflow-action' in request.POST and part_class_workflow_action is not None:
+            if len(part_class_action_ids) <= 0:
+                messages.warning(request, "No action was taken because no workflows were selected. Select workflows by checking the checkboxes below.")
+            elif part_class_workflow_action == 'submit-part-class-workflow-delete':
+                try:
+                    PartClassWorkflow.objects.filter(id__in=part_class_action_ids).delete()
+                except PartClassWorkflow.DoesNotExist as err:
+                    messages.error(request, f"No workflow found: {err}")
+                except ProtectedError as err:
+                    messages.error(request, f"Cannot delete workflow {err}")
+        elif 'workflow-state-action' in request.POST and workflow_state_action is not None:
+            if len(part_class_action_ids) <= 0:
+                messages.warning(request, "No action was taken because no workflow states were selected. Select states by checking the checkboxes below.")
+            elif workflow_state_action == 'submit-workflow-state-delete':
+                try:
+                    PartClassWorkflowState.objects.filter(id__in=part_class_action_ids).delete()
+                except PartClassWorkflow.DoesNotExist as err:
+                    messages.error(request, f"No workflow state found: {err}")
+                except ProtectedError as err:
+                    messages.error(request, f"Cannot delete workflow state {err}")
         elif 'change-number-scheme' in request.POST:
             tab_anchor = INDABOM_TAB
             if organization_parts_count > 0:
