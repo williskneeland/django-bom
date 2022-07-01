@@ -408,7 +408,11 @@ class PartWorkflowInstance(models.Model):
 
 class PartClassWorkflowCompletedTransition(models.Model):
     transition = models.ForeignKey(PartClassWorkflowStateTransition, on_delete=models.CASCADE, null=True, default=None)
-    completed_by = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, on_delete=models.SET_NULL, default=get_user_model().objects.first().pk)
+    completed_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL, 
+        null=True, on_delete=models.SET_NULL,
+        default=(get_user_model().objects.first().pk if get_user_model().objects.first() else None)
+    )
     comments = models.CharField(max_length=500, null=True, blank=True, default='')
     timestamp = models.DateTimeField(auto_now_add=True, blank=True)
     part = models.ForeignKey(Part, null=False, default=None, on_delete=models.CASCADE)
