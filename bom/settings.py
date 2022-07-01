@@ -14,6 +14,8 @@ import os
 
 
 BASE_DIR = None
+DEBUG = True
+SECRET_KEY = 'ChangeMe!'
 
 try:
     from bom.local_settings import *
@@ -38,11 +40,11 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    # 'materializecssform',
-    # 'social_django',
-    # 'djmoney',
-    # 'djmoney.contrib.exchange',
-    # 'django_select2',
+    'materializecssform',
+    'social_django',
+    'djmoney',
+    'djmoney.contrib.exchange',
+    'django_select2',
 ]
 
 MIDDLEWARE = [
@@ -84,6 +86,16 @@ TEMPLATES = [
         },
     },
 ]
+
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.sqlite3',
+        # 'NAME': BASE_DIR / 'db.sqlite3',
+        'NAME': os.path.join(BASE_DIR, 'db.sqlite3')
+    }
+}
+
+BOM_CONFIG = {}
 
 WSGI_APPLICATION = 'bom.wsgi.application'
 
@@ -145,17 +157,17 @@ LOGGING = {
     },
 }
 
-CACHES = {
-    "select2": {
-        "BACKEND": "django_redis.cache.RedisCache",
-        "LOCATION": "redis://127.0.0.1:6379/2",
-        "OPTIONS": {
-            "CLIENT_CLASS": "django_redis.client.DefaultClient",
-        }
-    }
-}
+# CACHES = {
+#     "select2": {
+#         "BACKEND": "django_redis.cache.RedisCache",
+#         "LOCATION": "redis://127.0.0.1:6379/2",
+#         "OPTIONS": {
+#             "CLIENT_CLASS": "django_redis.client.DefaultClient",
+#         }
+#     }
+# }
 
-SELECT2_CACHE_BACKEND = "select2"
+#SELECT2_CACHE_BACKEND = "LocMemCache"
 
 DEFAULT_AUTO_FIELD='django.db.models.AutoField'
 
