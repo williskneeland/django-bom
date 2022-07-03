@@ -13,19 +13,20 @@ https://docs.djangoproject.com/en/1.10/ref/settings/
 import os
 
 
-BASE_DIR = None
-DEBUG = True
-SECRET_KEY = 'ChangeMe!'
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+DEBUG = bool(int(os.environ.get('DEBUG', 0)))
+SECRET_KEY = os.environ.get('SECRET_KEY', 'ChangeMe!')
+
+ALLOWED_HOSTS = []
+ALLOWED_HOSTS_ENV = os.environ.get('ALLOWED_HOSTS')
+if ALLOWED_HOSTS_ENV:
+    ALLOWED_HOSTS.extend(ALLOWED_HOSTS_ENV.split(','))
 
 try:
     from bom.local_settings import *
 except ImportError as e:
     print(e)
     pass
-
-# Build paths inside the project like this: os.path.join(BASE_DIR, ...)
-if not BASE_DIR:
-    BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/1.10/howto/deployment/checklist/
