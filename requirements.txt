@@ -70,6 +70,5 @@ urllib3==1.26.5
 webencodings==0.5.1
 zipp==3.4.1
 anytree==2.8.0
-pygraphviz==1.9
 six==1.16.0
 django-select2==7.10.0
