@@ -21,6 +21,11 @@ ALLOWED_HOSTS = []
 ALLOWED_HOSTS_ENV = os.environ.get('ALLOWED_HOSTS')
 if ALLOWED_HOSTS_ENV:
     ALLOWED_HOSTS.extend(ALLOWED_HOSTS_ENV.split(','))
+    
+STATIC_URL_ENV = os.environ.get('STATIC_URL')
+MEDIA_URL_ENV = os.environ.get('MEDIA_URL')
+STATIC_ROOT_ENV = os.environ.get('STATIC_ROOT')
+MEDIA_ROOT_ENV = os.environ.get('MEDIA_ROOT')
 
 try:
     from bom.local_settings import *
@@ -158,18 +163,6 @@ LOGGING = {
     },
 }
 
-# CACHES = {
-#     "select2": {
-#         "BACKEND": "django_redis.cache.RedisCache",
-#         "LOCATION": "redis://127.0.0.1:6379/2",
-#         "OPTIONS": {
-#             "CLIENT_CLASS": "django_redis.client.DefaultClient",
-#         }
-#     }
-# }
-
-#SELECT2_CACHE_BACKEND = "LocMemCache"
-
 DEFAULT_AUTO_FIELD='django.db.models.AutoField'
 
 # Internationalization
@@ -188,11 +181,13 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/1.10/howto/static-files/
 
-STATIC_URL = '/static/'
-STATIC_ROOT = os.path.join(BASE_DIR, 'static/')
 
-MEDIA_URL = '/media/'
-MEDIA_ROOT = os.path.join(BASE_DIR, 'media/')
+
+STATIC_URL = STATIC_URL_ENV if STATIC_URL_ENV else '/static/'
+STATIC_ROOT = STATIC_ROOT_ENV if STATIC_ROOT_ENV else os.path.join(BASE_DIR, 'static/')
+
+MEDIA_URL = MEDIA_URL_ENV if MEDIA_URL_ENV else '/media/'
+MEDIA_ROOT = MEDIA_ROOT_ENV if MEDIA_ROOT_ENV else os.path.join(BASE_DIR, 'media/')
 
 LOGIN_URL = '/login/'
 LOGOUT_URL = '/logout/'
