@@ -47,7 +47,6 @@ from .part_bom import PartBom, PartBomItem, PartIndentedBomItem
 from .utils import increment_str, listify_string, prep_for_sorting_nicely, stringify_list, strip_trailing_zeros
 from .validators import alphanumeric, numeric, validate_pct
 from django.conf import settings
-#from django.contrib.auth import get_user_model
 
 
 logger = logging.getLogger(__name__)
@@ -411,7 +410,7 @@ class PartClassWorkflowCompletedTransition(models.Model):
     completed_by = models.ForeignKey(
         User, 
         null=True, on_delete=models.SET_NULL,
-        default=(get_user_model().objects.first().pk if get_user_model().objects.first() else None)
+        default=DEFAULT_PK
     )
     comments = models.CharField(max_length=500, null=True, blank=True, default='')
     timestamp = models.DateTimeField(auto_now_add=True, blank=True)
