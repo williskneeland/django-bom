@@ -47,11 +47,11 @@ from .part_bom import PartBom, PartBomItem, PartIndentedBomItem
 from .utils import increment_str, listify_string, prep_for_sorting_nicely, stringify_list, strip_trailing_zeros
 from .validators import alphanumeric, numeric, validate_pct
 from django.conf import settings
-from django.contrib.auth import get_user_model
+#from django.contrib.auth import get_user_model
 
 
 logger = logging.getLogger(__name__)
-
+DEFAULT_PK = 1
 
 class Organization(models.Model):
     name = models.CharField(max_length=255, default=None)
@@ -137,7 +137,7 @@ class UserMeta(models.Model):
 class PartClassWorkflowState(models.Model):
     name = models.CharField(max_length=255, default='', null=True, blank=True)
     is_final_state = models.BooleanField(default=False, null=False)
-    assigned_users = models.ManyToManyField(settings.AUTH_USER_MODEL)
+    assigned_users = models.ManyToManyField(User)
     description = models.CharField(max_length=255, default='', blank=True)
 
     def __str__(self):
@@ -401,7 +401,7 @@ class PartWorkflowInstance(models.Model):
     part = models.ForeignKey(Part, null=False, on_delete=models.CASCADE, default=None)
     workflow = models.ForeignKey(PartClassWorkflow, on_delete=models.CASCADE, default=None)
     current_state = models.ForeignKey(PartClassWorkflowState, on_delete=models.CASCADE, default=None)
-    currently_assigned_users = models.ManyToManyField(settings.AUTH_USER_MODEL, null=True, blank=True)
+    currently_assigned_users = models.ManyToManyField(User, null=True, blank=True)
 
     def __str__(self):
         return self.workflow.name
@@ -409,7 +409,7 @@ class PartWorkflowInstance(models.Model):
 class PartClassWorkflowCompletedTransition(models.Model):
     transition = models.ForeignKey(PartClassWorkflowStateTransition, on_delete=models.CASCADE, null=True, default=None)
     completed_by = models.ForeignKey(
-        settings.AUTH_USER_MODEL, 
+        User, 
         null=True, on_delete=models.SET_NULL,
         default=(get_user_model().objects.first().pk if get_user_model().objects.first() else None)
     )
