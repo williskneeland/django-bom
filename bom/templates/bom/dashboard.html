@@ -100,13 +100,13 @@
 
                             <th class="text-normal td-med">Part Number</th>
 
+                            <th class="text-normal td-small">Revision</th>
+
                             {% if organization.number_scheme == 'S' %}
                                 <th class="text-normal td-small">Category</th>
                             {% endif %}
 
                             <th class="text-normal td-large">Synopsis</th>
-
-                            <th class="text-normal td-small">Revision</th>
 
                             <th class="text-normal td-med">Manufacturer</th>
 
@@ -125,13 +125,13 @@
 
                                 <td class="text-normal td-med"><a href="{% url 'bom:part-info' part_id=part_rev.part.id %}">{{ part_rev.part.full_part_number }}</a></td>
 
+                                <td class="text-normal td-small">{{ part_rev.revision }}</td>
+                                
                                 {% if organization.number_scheme == 'S' %}
                                     <td class="text-normal td-small">{{ part_rev.part.number_class.name }}</td>
                                 {% endif %}
 
                                 <td class="text-normal td-large">{{ part_rev.synopsis }}</td>
-
-                                <td class="text-normal td-small">{{ part_rev.revision }}</td>
 
                                 <td class="text-normal td-med">{{ part_rev.part.primary_manufacturer_part.manufacturer.name }}</td>
 
