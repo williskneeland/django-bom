@@ -1108,9 +1108,9 @@ def create_part(request):
                 # number uniqueness. This way if someone else(s) working concurrently is also
                 # using the same part number, then only one person will succeed.
                 try:
-                    new_part.save()  # Database checks that the part number is still unique
                     pr = part_revision_form.save(commit=False)
                     pr.part = new_part  # Associate PartRevision with Part
+                    new_part.save()  # Database checks that the part number is still unique
                     pr.save()
                 except IntegrityError as err:
                     messages.error(request, "Error! Already created a part with part number {0}-{1}-{3}}".format(new_part.number_class.code, new_part.number_item, new_part.number_variation))
