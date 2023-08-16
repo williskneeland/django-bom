@@ -1365,6 +1365,57 @@ def remove_all_subparts(request, part_id, part_revision_id):
 
     return HttpResponseRedirect(reverse('bom:part-manage-bom', kwargs={'part_id': part_id, 'part_revision_id': part_revision_id}))
 
+@login_required
+def sync_bom_to_odoo(request, part_id, part_revision_id):
+    user = request.user
+    profile = user.bom_profile()
+    organization = profile.organization
+
+    part_revision = get_object_or_404(PartRevision, pk=part_revision_id)
+
+    try:
+        bom = part_revision.flat()
+    except (RuntimeError, RecursionError):
+        messages.error(request, "Error: infinite recursion in part relationship. Contact info@indabom.com to resolve.")
+        bom = []
+    except AttributeError as err:
+        messages.error(request, err)
+        bom = []
+
+    # Odoo sync code goes here!
+
+    '''
+    values accessible through bom variable:
+    bom.part_revision   - part_revision the bom is describing  (PartRevision model)
+    bom.parts           - parts used in the bom (PartBom obj)
+    '''
+
+    for part_id, part_bom_item in bom.parts.items():
+        '''
+        Available values for reference, remove this when finished!
+
+        Likely only values we'll need:
+        part_bom_item.part              - part
+        part_bom_item.part_revision     - part_revision
+        part_bom_item.quantity          - quantity
+
+
+        Other values we can use:
+        part_bom_item.bom_id            - bom_id
+        part_bom_item.extended_quantity - extended_quantity
+        part_bom_item._currency         - currency
+        part_bom_item.order_cost        - order_cost
+        part_bom_item.seller_part       - seller_part
+        part_bom_item.alternates        - alternates
+        '''
+        part = part_bom_item.part
+        part_rev = part_bom_item.part_revision
+        qty = part_bom_item.quantity
+
+        print(part, part_rev, qty)
+
+
+    return HttpResponseRedirect(reverse('bom:part-manage-bom', kwargs={'part_id': part_id, 'part_revision_id': part_revision_id}))
 
 @login_required
 def add_sellerpart(request, manufacturer_part_id):
