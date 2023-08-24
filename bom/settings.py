@@ -10,7 +10,20 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/1.10/ref/settings/
 """
 
+
 import os
+import xmlrpc
+
+
+ODOO_URL        = 'http://localhost:8069'
+ODOO_DB         = 'octopart_api'
+ODOO_USERNAME   = 'patrick.chen@simplyembedded.ca'
+ODOO_PASSWORD   = 'CoolOdoo29@'
+ODOO_COMMON_URL = f"{ODOO_URL}/xmlrpc/2/common"
+ODOO_OBJECT_URL = f"{ODOO_URL}/xmlrpc/2/object"
+
+
+
 
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
