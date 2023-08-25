@@ -318,3 +318,4 @@ def bom_odoo_creation(part_revision, request):
                  
         except:
             return False
+

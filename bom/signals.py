@@ -135,3 +135,24 @@ def create_class_in_odoo(sender, instance, **kwargs):
     
     else:
         return
+
+    
+
+
+    
+
+
+    
+    
+
+
+    
+     
+        
+    
+    
+    
+    
+
+
+

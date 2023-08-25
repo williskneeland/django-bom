@@ -1392,6 +1392,9 @@ def sync_bom_to_odoo(request, part_id, part_revision_id):
     
     else: # fail/False. Something went wrong
         messages.error(request, "BOM Creation in Odoo failed.")
+      
+    # else:  # means the return value is an integer (the num of subparts not found) --> Bom was created but not all subparts were found/added
+    #     messages.warning(request, f"A BOM was successfully created in Odoo. However, {message_for_user} subpart(s) were not found.")
         
     return HttpResponseRedirect(reverse('bom:part-manage-bom', kwargs={'part_id': part_id, 'part_revision_id': part_revision_id})) # constant
     
