@@ -3,6 +3,11 @@ import logging
 import operator
 from functools import reduce
 from json import dumps, loads
+import xmlrpc.client
+
+from ..settings import ODOO_DB, ODOO_COMMON_URL, ODOO_PASSWORD, ODOO_URL, ODOO_USERNAME, ODOO_OBJECT_URL
+from ..odoo_comm import authenticate_odoo, account_for_001_010, add_subparts_to_bom_views, bom_odoo_creation
+
 
 from django.contrib import messages
 from django.contrib.auth import authenticate, get_user_model, login
@@ -413,6 +418,9 @@ def bom_settings(request, tab_anchor=None):
     if request.method == 'POST':
         part_class_action_ids = request.POST.getlist('actions')
         part_class_action = request.POST.get('part-class-action')
+        part_class_workflow_action = request.POST.get('part-class-workflow-action')
+        workflow_state_action = request.POST.get('workflow-state-action')
+
         if 'submit-edit-user' in request.POST:
             tab_anchor = USER_TAB
             user_form = UserForm(request.POST, instance=user)
@@ -536,6 +544,26 @@ def bom_settings(request, tab_anchor=None):
                     messages.error(request, f"No part class found: {err}")
                 except ProtectedError as err:
                     messages.error(request, f"Cannot delete a part class because it has parts. You must delete those parts first. {err}")
+        elif 'part-class-workflow-action' in request.POST and part_class_workflow_action is not None:
+            if len(part_class_action_ids) <= 0:
+                messages.warning(request, "No action was taken because no workflows were selected. Select workflows by checking the checkboxes below.")
+            elif part_class_workflow_action == 'submit-part-class-workflow-delete':
+                try:
+                    PartClassWorkflow.objects.filter(id__in=part_class_action_ids).delete()
+                except PartClassWorkflow.DoesNotExist as err:
+                    messages.error(request, f"No workflow found: {err}")
+                except ProtectedError as err:
+                    messages.error(request, f"Cannot delete workflow {err}")
+        elif 'workflow-state-action' in request.POST and workflow_state_action is not None:
+            if len(part_class_action_ids) <= 0:
+                messages.warning(request, "No action was taken because no workflow states were selected. Select states by checking the checkboxes below.")
+            elif workflow_state_action == 'submit-workflow-state-delete':
+                try:
+                    PartClassWorkflowState.objects.filter(id__in=part_class_action_ids).delete()
+                except PartClassWorkflow.DoesNotExist as err:
+                    messages.error(request, f"No workflow state found: {err}")
+                except ProtectedError as err:
+                    messages.error(request, f"Cannot delete workflow state {err}")
         elif 'change-number-scheme' in request.POST:
             tab_anchor = INDABOM_TAB
             if organization_parts_count > 0:
@@ -1085,9 +1113,9 @@ def create_part(request):
                 # number uniqueness. This way if someone else(s) working concurrently is also
                 # using the same part number, then only one person will succeed.
                 try:
-                    new_part.save()  # Database checks that the part number is still unique
                     pr = part_revision_form.save(commit=False)
                     pr.part = new_part  # Associate PartRevision with Part
+                    new_part.save()  # Database checks that the part number is still unique
                     pr.save()
                 except IntegrityError as err:
                     messages.error(request, "Error! Already created a part with part number {0}-{1}-{3}}".format(new_part.number_class.code, new_part.number_item, new_part.number_variation))
@@ -1342,6 +1370,35 @@ def remove_all_subparts(request, part_id, part_revision_id):
 
     return HttpResponseRedirect(reverse('bom:part-manage-bom', kwargs={'part_id': part_id, 'part_revision_id': part_revision_id}))
 
+
+###################################################################### SYNC ODOO FUNCTION ##########################################################################
+
+@login_required
+def sync_bom_to_odoo(request, part_id, part_revision_id):
+    
+    # print(part_id)
+    # print(part_revision_id)
+    
+    user = request.user
+    profile = user.bom_profile()
+    organization = profile.organization
+
+    part_revision = get_object_or_404(PartRevision, pk=part_revision_id)
+    
+    message_for_user = bom_odoo_creation(part_revision, request)
+    
+    if  message_for_user == True:   # success
+        messages.info(request, "A BOM was successfully created in Odoo.")
+    
+    else: # fail/False. Something went wrong
+        messages.error(request, "BOM Creation in Odoo failed.")
+      
+    # else:  # means the return value is an integer (the num of subparts not found) --> Bom was created but not all subparts were found/added
+    #     messages.warning(request, f"A BOM was successfully created in Odoo. However, {message_for_user} subpart(s) were not found.")
+        
+    return HttpResponseRedirect(reverse('bom:part-manage-bom', kwargs={'part_id': part_id, 'part_revision_id': part_revision_id})) # constant
+    
+#############################################################################################################################################################
 
 @login_required
 def add_sellerpart(request, manufacturer_part_id):

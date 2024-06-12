@@ -100,13 +100,13 @@
 
                             <th class="text-normal td-med">Part Number</th>
 
+                            <th class="text-normal td-small">Revision</th>
+
                             {% if organization.number_scheme == 'S' %}
                                 <th class="text-normal td-small">Category</th>
                             {% endif %}
 
                             <th class="text-normal td-large">Synopsis</th>
-
-                            <th class="text-normal td-small">Revision</th>
 
                             <th class="text-normal td-med">Manufacturer</th>
 
@@ -125,13 +125,13 @@
 
                                 <td class="text-normal td-med"><a href="{% url 'bom:part-info' part_id=part_rev.part.id %}">{{ part_rev.part.full_part_number }}</a></td>
 
+                                <td class="text-normal td-small">{{ part_rev.revision }}</td>
+                                
                                 {% if organization.number_scheme == 'S' %}
                                     <td class="text-normal td-small">{{ part_rev.part.number_class.name }}</td>
                                 {% endif %}
 
                                 <td class="text-normal td-large">{{ part_rev.synopsis }}</td>
-
-                                <td class="text-normal td-small">{{ part_rev.revision }}</td>
 
                                 <td class="text-normal td-med">{{ part_rev.part.primary_manufacturer_part.manufacturer.name }}</td>
 
@@ -187,7 +187,7 @@
                 {% if part_revs.has_other_pages %}
                     <ul class="pagination center" style="padding-top: 24px;">
                         {% if part_revs.has_previous %}
-                            <li><a href="?page={{ part_revs.previous_page_number }}{% if query %}&q={{ query }}{% endif %}"><i class="material-icons">chevron_left</i></a></li>
+                            <li><a href="?page={{ part_revs.previous_page_number }}{% if part_class %}&part_class={{ part_class }}{% endif %}{% if query %}&q={{ query }}{% endif %}"><i class="material-icons">chevron_left</i></a></li>
                         {% else %}
                             <li class="disabled"><i class="material-icons">chevron_left</i></li>
                         {% endif %}
@@ -195,11 +195,11 @@
                             {% if part_revs.number == i %}
                                 <li class="active green lighten-2"><a>{{ i }}</a></li>
                             {% else %}
-                                <li class="waves-effect waves-green"><a href="?page={{ i }}{% if query %}&q={{ query }}{% endif %}">{{ i }}</a></li>
+                                <li class="waves-effect waves-green"><a href="?page={{ i }}{% if part_class %}&part_class={{ part_class }}{% endif %}{% if query %}&q={{ query }}{% endif %}">{{ i }}</a></li>
                             {% endif %}
                         {% endfor %}
                         {% if part_revs.has_next %}
-                            <li><a href="?page={{ part_revs.next_page_number }}{% if query %}&q={{ query }}{% endif %}"><i class="material-icons">chevron_right</i></a></li>
+                            <li><a href="?page={{ part_revs.next_page_number }}{% if part_class %}&part_class={{ part_class }}{% endif %}{% if query %}&q={{ query }}{% endif %}"><i class="material-icons">chevron_right</i></a></li>
                         {% else %}
                             <li class="disabled"><i class="material-icons">chevron_right</i></li>
                         {% endif %}

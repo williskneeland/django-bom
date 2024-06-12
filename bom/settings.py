@@ -10,20 +10,41 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/1.10/ref/settings/
 """
 
+
 import os
+import xmlrpc
 
 
-BASE_DIR = None
+ODOO_URL        = 'http://localhost:8069'
+ODOO_DB         = 'Octopart-Odoo_Connector'
+ODOO_USERNAME   = 'arin.johar@simplyembedded.ca'
+ODOO_PASSWORD   = 'Arin2007'
+ODOO_COMMON_URL = f"{ODOO_URL}/xmlrpc/2/common"
+ODOO_OBJECT_URL = f"{ODOO_URL}/xmlrpc/2/object"
+
+
+
+
+
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+DEBUG = bool(int(os.environ.get('DEBUG', 0)))
+SECRET_KEY = os.environ.get('SECRET_KEY', 'ChangeMe!')
+
+ALLOWED_HOSTS = []
+ALLOWED_HOSTS_ENV = os.environ.get('ALLOWED_HOSTS')
+if ALLOWED_HOSTS_ENV:
+    ALLOWED_HOSTS.extend(ALLOWED_HOSTS_ENV.split(','))
+    
+STATIC_URL_ENV = os.environ.get('STATIC_URL')
+MEDIA_URL_ENV = os.environ.get('MEDIA_URL')
+STATIC_ROOT_ENV = os.environ.get('STATIC_ROOT')
+MEDIA_ROOT_ENV = os.environ.get('MEDIA_ROOT')
 
 try:
     from bom.local_settings import *
 except ImportError as e:
     print(e)
     pass
-
-# Build paths inside the project like this: os.path.join(BASE_DIR, ...)
-if not BASE_DIR:
-    BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/1.10/howto/deployment/checklist/
@@ -38,11 +59,11 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    # 'materializecssform',
-    # 'social_django',
-    # 'djmoney',
-    # 'djmoney.contrib.exchange',
-    # 'django_select2',
+    'materializecssform',
+    'social_django',
+    'djmoney',
+    'djmoney.contrib.exchange',
+    'django_select2',
 ]
 
 MIDDLEWARE = [
@@ -84,6 +105,16 @@ TEMPLATES = [
         },
     },
 ]
+
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.sqlite3',
+        # 'NAME': BASE_DIR / 'db.sqlite3',
+        'NAME': os.path.join(BASE_DIR, 'db.sqlite3')
+    }
+}
+
+BOM_CONFIG = {}
 
 WSGI_APPLICATION = 'bom.wsgi.application'
 
@@ -145,18 +176,6 @@ LOGGING = {
     },
 }
 
-CACHES = {
-    "select2": {
-        "BACKEND": "django_redis.cache.RedisCache",
-        "LOCATION": "redis://127.0.0.1:6379/2",
-        "OPTIONS": {
-            "CLIENT_CLASS": "django_redis.client.DefaultClient",
-        }
-    }
-}
-
-SELECT2_CACHE_BACKEND = "select2"
-
 DEFAULT_AUTO_FIELD='django.db.models.AutoField'
 
 # Internationalization
@@ -175,11 +194,13 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/1.10/howto/static-files/
 
-STATIC_URL = '/static/'
-STATIC_ROOT = os.path.join(BASE_DIR, 'static/')
 
-MEDIA_URL = '/media/'
-MEDIA_ROOT = os.path.join(BASE_DIR, 'media/')
+
+STATIC_URL = STATIC_URL_ENV if STATIC_URL_ENV else '/static/'
+STATIC_ROOT = STATIC_ROOT_ENV if STATIC_ROOT_ENV else os.path.join(BASE_DIR, 'static/')
+
+MEDIA_URL = MEDIA_URL_ENV if MEDIA_URL_ENV else '/media/'
+MEDIA_ROOT = MEDIA_ROOT_ENV if MEDIA_ROOT_ENV else os.path.join(BASE_DIR, 'media/')
 
 LOGIN_URL = '/login/'
 LOGOUT_URL = '/logout/'
